@@ -160,7 +160,7 @@ class FondationService
             // 🔹 Mettre à jour les achats associés
             Achat::whereIn('id', $achatsIds)->update([
                 'etat'   => 'fondue',
-                'statut' => 'terminer',
+                'status' => 'terminer',
             ]);
 
             // 🔹 Création de la fondation
