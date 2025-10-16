@@ -2,16 +2,21 @@
 
 namespace App\Modules\Purchase\Resources;
 
+use App\Traits\Helper;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class AchatResource extends JsonResource
 {
+    use Helper;
+
     public function toArray($request): array
     {
         return [
             'id' => $this->id,
             'reference' => $this->reference,
             'commentaire' => $this->commentaire,
+            'poids_total' => $this->barres->sum('poid_pure'),
+            'carrat_moyenne' => $this->carratMoyenne($this->id),
             'achat_status' => $this->status,
 
             // Fournisseur relationship
