@@ -3,10 +3,13 @@
 namespace App\Modules\Purchase\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Purchase\Models\Achat;
 use App\Modules\Purchase\Models\Barre;
+use App\Modules\Purchase\Models\Lot;
 use App\Modules\Purchase\Requests\StoreBarreRequest;
 use App\Modules\Purchase\Resources\BarreResource;
 use App\Traits\ApiResponses;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -42,11 +45,20 @@ class BarreController extends Controller
 
         try {
             $data = collect($request->validated())->map(function ($item){
-                $item['created_by'] = Auth::id();
+                    $item['created_by'] = Auth::id();
+                    $item['created_at'] = Carbon::now();
+                    $item['updated_at'] = Carbon::now();
                 return $item;
             })->toArray();
 
             Barre::insert($data);
+
+            $achat = Achat::find($data[0]['achat_id']);
+
+            if ($achat) {
+                $achat->update(['status' => 'terminer']);
+                Lot::where('id', $achat->lot_id)->update(['status' => 'terminer']);
+            }
 
             DB::commit();
 
