@@ -12,7 +12,7 @@ class AchatResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id ?? null,
             'reference' => $this->reference,
             'commentaire' => $this->commentaire,
             'poids_total' => $this->barres->sum('poid_pure'),
@@ -22,10 +22,10 @@ class AchatResource extends JsonResource
             // Fournisseur relationship
             'fournisseur' => $this->whenLoaded('fournisseur', function () {
                 return [
-                    'id' => $this->fournisseur->id,
-                    'name' => $this->fournisseur->name,
-                    'adresse' => $this->fournisseur->adresse,
-                    'telephone' => $this->fournisseur->telephone,
+                    'id' => $this->fournisseur->id ?? null,
+                    'name' => $this->fournisseur->name ?? null,
+                    'adresse' => $this->fournisseur->adresse ?? null,
+                    'telephone' => $this->fournisseur->telephone ?? null,
                     'image' => is_null($this->fournisseur->image) ? asset('/images/male.jpg') : asset('/storage/images/fournisseurs/'.$this->fournisseur->image),
                 ];
             }),
@@ -33,21 +33,21 @@ class AchatResource extends JsonResource
             // Lot relationship
             'lot' => $this->whenLoaded('lot', function () {
                 return [
-                    'id' => $this->lot->id,
-                    'libelle' => $this->lot->libelle,
-                    'commentaire' => $this->lot->commentaire,
-                    'date' => $this->lot->date,
-                    'lot_status' => $this->lot->status,
+                    'id' => $this->lot->id ?? null,
+                    'libelle' => $this->lot->libelle ?? null,
+                    'commentaire' => $this->lot->commentaire ?? null,
+                    'date' => $this->lot->date ?? null,
+                    'lot_status' => $this->lot->status ?? null,
                 ];
             }),
 
             'barres' => $this->barres->map(function ($barre){
                 return [
-                    'id' => $this->barre->id,
-                    'poid_pure' => $this->barre->poid_pure,
-                    'carrat_pure' => $this->barre->carrat_pure,
+                    'id' => $this->barre->id ?? null,
+                    'poid_pure' => $this->barre->poid_pure ?? null,
+                    'carrat_pure' => $this->barre->carrat_pure ?? null,
                     'densite' => $this->barre->densite ?? null,
-                    'barre_status' => $this->barre->status,
+                    'barre_status' => $this->barre->status ?? null,
                 ];
             }),
 
