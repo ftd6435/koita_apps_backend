@@ -43,11 +43,11 @@ class AchatResource extends JsonResource
 
             'barres' => $this->barres->map(function ($barre){
                 return [
-                    'id' => $this->barre->id ?? null,
-                    'poid_pure' => $this->barre->poid_pure ?? null,
-                    'carrat_pure' => $this->barre->carrat_pure ?? null,
-                    'densite' => $this->barre->densite ?? null,
-                    'barre_status' => $this->barre->status ?? null,
+                    'id' => $barre->id ?? null,
+                    'poid_pure' => $barre->poid_pure ?? null,
+                    'carrat_pure' => $barre->carrat_pure ?? null,
+                    'densite' => $barre->densite ?? null,
+                    'barre_status' => $barre->status ?? null,
                 ];
             }),
 

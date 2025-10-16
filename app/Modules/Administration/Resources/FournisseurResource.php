@@ -20,16 +20,16 @@ class FournisseurResource extends JsonResource
             // ✅ Achats relationship
             'achats' => $this->achats->map(function ($achat){
                 return [
-                    'id' => $this->achat->id,
-                    'reference' => $this->achat->reference,
+                    'id' => $achat->id ?? null,
+                    'reference' => $achat->reference ?? null,
                     'lot' => [
-                        'id' => $this->achat->lot->id,
-                        'libelle' => $this->achat->lot->libelle,
-                        'commentaire' => $this->achat->lot->commentaire ?? null,
-                        'lot_status' => $this->achat->lot->status ?? null,
+                        'id' => $achat->lot->id ?? null,
+                        'libelle' => $achat->lot->libelle ?? null,
+                        'commentaire' => $achat->lot->commentaire ?? null,
+                        'lot_status' => $achat->lot->status ?? null,
                     ],
-                    'commentaire' => $this->achat->commentaire ?? null,
-                    'achat_status' => $this->achat->status,
+                    'commentaire' => $achat->commentaire ?? null,
+                    'achat_status' => $achat->status ?? null,
                 ];
             }),
 
