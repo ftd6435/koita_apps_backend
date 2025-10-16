@@ -18,7 +18,7 @@ class StoreFondationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_init_achat'  => 'required|integer|exists:achats,id',
+           
             '*.ids_barres'   => 'required|array|min:1',
             '*.ids_barres.*' => 'integer|distinct|min:1',
             '*.poids_fondu'  => 'required|numeric|min:0',
