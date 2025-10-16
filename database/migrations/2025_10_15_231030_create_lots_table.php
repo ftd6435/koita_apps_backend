@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('libelle')->unique();
             $table->text('commentaire')->nullable();
-            $table->date('date')->default(Carbon::today()->format('m-d-Y'));
+            $table->date('date')->useCurrent();
             $table->enum('status', ['encours', 'terminer'])->default('encours');
             $table->foreignId('created_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->cascadeOnDelete();
