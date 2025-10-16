@@ -1,9 +1,8 @@
 <?php
-
 namespace App\Modules\Fondation\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
 class StoreFondationRequest extends FormRequest
@@ -19,13 +18,14 @@ class StoreFondationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            '*.ids_barres'         => 'required|array|min:1',
-            '*.ids_barres.*'       => 'integer|distinct|min:1',
-            '*.poids_fondu'         => 'required|numeric|min:0',
-            '*.carrat_fondu'        => 'required|numeric|min:0',
-            '*.poids_dubai'        => 'nullable|numeric|min:0',
-            '*.carrat_dubai'       => 'nullable|numeric|min:0',
-            '*.is_fixed'           => 'nullable|boolean',
+            'id_init_achat'  => 'required|integer|exists:achats,id',
+            '*.ids_barres'   => 'required|array|min:1',
+            '*.ids_barres.*' => 'integer|distinct|min:1',
+            '*.poids_fondu'  => 'required|numeric|min:0',
+            '*.carrat_fondu' => 'required|numeric|min:0',
+            '*.poids_dubai'  => 'nullable|numeric|min:0',
+            '*.carrat_dubai' => 'nullable|numeric|min:0',
+            '*.is_fixed'     => 'nullable|boolean',
         ];
     }
 
