@@ -33,6 +33,7 @@ class BarreResource extends JsonResource
                     'lot_status' => $this->achat->lot->status ?? null,
                 ],
                 'commentaire' => $this->achat->commentaire ?? null,
+                'etat_achat' => $this->achat->etat,
                 'achat_status' => $this->achat->status,
             ] : null,
 

@@ -29,6 +29,7 @@ class FournisseurResource extends JsonResource
                         'lot_status' => $achat->lot->status ?? null,
                     ],
                     'commentaire' => $achat->commentaire ?? null,
+                    'etat_achat' => $achat->etat ?? null,
                     'achat_status' => $achat->status ?? null,
                 ];
             }),

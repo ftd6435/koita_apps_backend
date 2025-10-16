@@ -17,6 +17,7 @@ class AchatResource extends JsonResource
             'commentaire' => $this->commentaire,
             'poids_total' => $this->barres->sum('poid_pure'),
             'carrat_moyenne' => $this->carratMoyenne($this->id),
+            'etat_achat' => $this->etat,
             'achat_status' => $this->status,
 
             // Fournisseur relationship
@@ -41,7 +42,7 @@ class AchatResource extends JsonResource
                 ];
             }),
 
-            'barres' => $this->barres->map(function ($barre){
+            'barres' => $this->barres->map(function ($barre) {
                 return [
                     'id' => $barre->id ?? null,
                     'poid_pure' => $barre->poid_pure ?? null,

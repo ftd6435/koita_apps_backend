@@ -5,7 +5,7 @@ use App\Modules\Purchase\Controllers\BarreController;
 use App\Modules\Purchase\Controllers\LotController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->prefix('v1/gestion')->group(function(){
+Route::middleware('auth:sanctum')->prefix('v1/gestion')->group(function () {
     // Gestion des lots
     Route::get('lots/status/{id}', [LotController::class, 'status']);
     Route::get('lots/restore/{id}', [LotController::class, 'restore']);
@@ -14,6 +14,7 @@ Route::middleware('auth:sanctum')->prefix('v1/gestion')->group(function(){
 
     // Gestion des achats
     Route::get('achats/status/{id}', [AchatController::class, 'status']);
+    Route::get('achats/etat/{id}', [AchatController::class, 'etat']);
     Route::get('achats/restore/{id}', [AchatController::class, 'restore']);
     Route::delete('achats/delete/{id}', [AchatController::class, 'forceDelete']);
     Route::apiResource('achats', AchatController::class);

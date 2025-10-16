@@ -19,6 +19,7 @@ class Achat extends Model
         'lot_id',
         'commentaire',
         'status',
+        'etat',
         'created_by',
         'updated_by'
     ];
