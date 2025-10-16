@@ -32,7 +32,7 @@ class FondationResource extends JsonResource
             // 🔹 Audit
             'created_by'   => $this->createur?->name,
             'modify_by'    => $this->modificateur?->name,
-
+            'resume'       => $this->resume,
             // 🔹 Dates
             'created_at'   => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at'   => $this->updated_at?->format('Y-m-d H:i:s'),
