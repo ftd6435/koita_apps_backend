@@ -91,7 +91,6 @@ class ExpeditionService
             ], 500);
         }
     }
-    
 
     /**
      * 🔹 Récupérer une expédition spécifique
@@ -152,4 +151,43 @@ class ExpeditionService
             ], 500);
         }
     }
+
+    public function calculerPoidsEtCarat(int $id_init_livraison): array
+    {
+        // 🔹 Récupérer toutes les expéditions liées
+        $expeditions = Expedition::where('id_init_livraison', $id_init_livraison)
+            ->with('fondation')
+            ->get();
+
+        if ($expeditions->isEmpty()) {
+            return [
+                'poids_total' => 0,
+                'carrat_moyen' => 0,
+            ];
+        }
+
+        $poidsTotal         = 0;
+        $sommeCaratPonderee = 0;
+
+        foreach ($expeditions as $expedition) {
+            if ($expedition->fondation) {
+                $poids = (float) $expedition->fondation->poids_fondu;
+                $carat = (float) $expedition->fondation->carrat_fondu;
+
+                $poidsTotal += $poids;
+                $sommeCaratPonderee += $poids * $carat;
+            }
+        }
+
+        // 🔹 Calcul du carat moyen pondéré
+        $caratMoyen = $poidsTotal > 0
+            ? round($sommeCaratPonderee / $poidsTotal, 3)
+            : 0;
+
+        return [
+            'poids_total' => round($poidsTotal, 3),
+            'carrat_moyen' => $caratMoyen,
+        ];
+    }
+
 }
