@@ -107,6 +107,7 @@ class FixingClientService
         }
     }
 
+
     /**
      * 🔹 Supprimer un fixing client
      */
@@ -141,5 +142,65 @@ class FixingClientService
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+    public function calculerFacture(int $id_fixing): array
+    {
+        $fixing = FixingClient::find($id_fixing);
+
+        if (! $fixing) {
+            return [
+                'status'  => 404,
+                'message' => "Fixing introuvable avec l’ID {$id_fixing}.",
+            ];
+        }
+
+        $densite = 22;
+        $bourse = (float) $fixing->bourse;
+        $discompte = (float) $fixing->discompte;
+        $prixUnitaire = ($bourse / 34) - $discompte;
+
+        $fondations = Fondation::where('id_fixing', $fixing->id)->get();
+        $details = [];
+        $totalFacture = 0;
+
+        foreach ($fondations as $fondation) {
+            $poids = (float) $fondation->poids_fondu;
+            $carat = (float) $fondation->carrat_fondu;
+
+            // 💰 Calcul brut
+            $montant = ($prixUnitaire / $densite) * $poids * $carat;
+
+            // 🔹 Troncature à 2 décimales sans arrondir
+            $prixUnitaireTronque = $this->truncate($prixUnitaire, 2);
+            $montantTronque = $this->truncate($montant, 2);
+
+            $details[] = [
+                'id_fondation'  => $fondation->id,
+                'reference'     => $fondation->initFondation?->reference ?? null,
+                'poids_fondu'   => $poids,
+                'carrat_fondu'  => $carat,
+                'prix_unitaire' => $prixUnitaireTronque,
+                'montant'       => $montantTronque,
+            ];
+
+            $totalFacture += $montantTronque;
+        }
+
+        return [
+            'status'         => 200,
+            'id_fixing'      => $fixing->id,
+            'prix_unitaire'  => $this->truncate($prixUnitaire, 2),
+            'fondations'     => $details,
+            'total_facture'  => $this->truncate($totalFacture, 2),
+        ];
+    }
+
+    /**
+     * 🔹 Tronque un nombre à X décimales sans arrondir.
+     */
+    private function truncate(float $number, int $decimals = 2): float
+    {
+        $factor = pow(10, $decimals);
+        return floor($number * $factor) / $factor;
     }
 }
