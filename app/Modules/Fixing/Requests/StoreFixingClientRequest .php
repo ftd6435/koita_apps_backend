@@ -48,11 +48,11 @@ class StoreFixingClientRequest extends FormRequest
         ];
     }
 
-    protected function failedValidation(Validator $validator)
+   protected function failedValidation(Validator $validator)
     {
         throw new ValidationException($validator, response()->json([
             'status'  => 422,
-            'message' => 'Erreur de validation.',
+            'message' => 'Erreur de validation',
             'errors'  => $validator->errors(),
         ], 422));
     }
