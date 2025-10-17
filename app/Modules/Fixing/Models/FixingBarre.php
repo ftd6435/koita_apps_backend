@@ -11,6 +11,8 @@ class FixingBarre extends Model
 {
     use SoftDeletes;
 
+    protected $table = "fixing_barre";
+
     protected $fillable = [
         'fixing_id',
         'barre_id',

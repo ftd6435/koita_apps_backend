@@ -77,9 +77,39 @@ class FixingController extends Controller
         }
     }
 
-    public function update()
+    public function update(StoreFixingRequest $request, string $id)
     {
-        // Code here...
+        $fixing = Fixing::find($id);
+
+        if(! $fixing){
+            return $this->errorResponse('Fixing introuvable');
+        }
+
+        $fields = $request->validated();
+        $fields['updated_by'] = Auth::id();
+
+        DB::beginTransaction();
+
+        try {
+            $devise = Devise::find($fields['devise_id']);
+
+            if (Str::upper($devise->symbole) == 'USD') {
+                $bourse = $fields['bourse'] ?? 0;
+                $discount = $fields['discount'] ?? 0;
+
+                $fields['unit_price'] = ($bourse / 34) - $discount;
+            }
+
+            $fixing->update($fields);
+
+            DB::commit();
+
+            return $this->successResponse($fixing, 'Fxing mis a jour avec succès.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return $this->errorResponse('Erreur lors de l\'ajout du fixing : '.$e->getMessage(), 500);
+        }
     }
 
     public function destroy(string $id)
