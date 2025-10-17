@@ -5,6 +5,7 @@ namespace App\Modules\Fixing\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Modules\Settings\Resources\ClientResource;
+use App\Modules\Fixing\Resources\ExpeditionResource;
 
 class InitLivraisonResource extends JsonResource
 {
@@ -21,6 +22,11 @@ class InitLivraisonResource extends JsonResource
 
             // 🔹 Client associé (via ClientResource)
             'client'      => new ClientResource($this->whenLoaded('client')),
+
+            // 🔹 Liste des expéditions liées
+            'expeditions' => ExpeditionResource::collection(
+                $this->whenLoaded('expeditions')
+            ),
 
             // 🔹 Audit
             'created_by'  => $this->createur?->name,

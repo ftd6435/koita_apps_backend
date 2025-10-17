@@ -46,7 +46,7 @@ class InitLivraisonService
     public function getAll()
     {
         try {
-            $livraisons = InitLivraison::with(['client', 'createur', 'modificateur'])
+            $livraisons = InitLivraison::with(['client', 'createur', 'expeditions','modificateur'])
                 ->orderByDesc('id')
                 ->get();
 
