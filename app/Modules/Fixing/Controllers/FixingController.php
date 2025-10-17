@@ -148,10 +148,9 @@ class FixingController extends Controller
             return $this->errorResponse("Fixing introuvable");
         }
 
-        $fixing->fixingBarres()->update(['is_fixed' => false]);
-
-        foreach($fixing->fixingBarres as $barre){
-            $barre->forceDelete();
+        foreach($fixing->fixingBarres as $fixingBarre){
+            $fixingBarre->barre->update(['is_fixed' => false]);
+            $fixingBarre->forceDelete();
         }
 
         $fixing->delete();
