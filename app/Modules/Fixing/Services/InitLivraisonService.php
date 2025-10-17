@@ -27,7 +27,9 @@ class InitLivraisonService
             return response()->json([
                 'status'  => 200,
                 'message' => 'Livraison initialisée avec succès.',
-                'data'    => new InitLivraisonResource($livraison->load(['client', 'createur', 'modificateur'])),
+                'data'    => new InitLivraisonResource(
+                    $livraison->load(['client', 'createur', 'modificateur', 'fondations'])
+                ),
             ]);
         } catch (Exception $e) {
             DB::rollBack();
@@ -46,7 +48,12 @@ class InitLivraisonService
     public function getAll()
     {
         try {
-            $livraisons = InitLivraison::with(['client', 'createur', 'expeditions','modificateur'])
+            $livraisons = InitLivraison::with([
+                    'client',
+                    'createur',
+                    'modificateur',
+                    'fondations',
+                ])
                 ->orderByDesc('id')
                 ->get();
 
@@ -70,7 +77,13 @@ class InitLivraisonService
     public function getOne(int $id)
     {
         try {
-            $livraison = InitLivraison::with(['client', 'createur', 'modificateur'])->find($id);
+            $livraison = InitLivraison::with([
+                    'client',
+                    'createur',
+                    'modificateur',
+                    'fondations',
+                ])
+                ->find($id);
 
             if (! $livraison) {
                 return response()->json([
