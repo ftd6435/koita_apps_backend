@@ -10,6 +10,7 @@ use App\Modules\Fixing\Resources\FixingResource;
 use App\Modules\Purchase\Models\Barre;
 use App\Modules\Settings\Models\Devise;
 use App\Traits\ApiResponses;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -34,6 +35,23 @@ class FixingController extends Controller
         }
 
         return $this->successResponse(new FixingResource($fixing), "Fixing demandé bien chargé.");
+    }
+
+    public function status(Request $request, string $id)
+    {
+        $request->validate([
+            'status' => "required|in:en attente,confirmer,valider"
+        ]);
+
+        $fixing = Fixing::find($id);
+
+        if(! $fixing){
+            return $this->errorResponse("Fixing introuvable");
+        }
+
+        $fixing->update(['status' => $request->status]);
+
+        return $this->successResponse("Status du fixing mis a jour avec succès.");
     }
 
     public function store(StoreFixingRequest $request)
@@ -108,22 +126,46 @@ class FixingController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            return $this->errorResponse('Erreur lors de l\'ajout du fixing : '.$e->getMessage(), 500);
+            return $this->errorResponse('Erreur lors de la mise a jou du fixing : '.$e->getMessage(), 500);
         }
     }
 
     public function destroy(string $id)
     {
-        // Code here...
+        $fixing = Fixing::find($id);
+
+        if(! $fixing){
+            return $this->errorResponse("Fixing introuvable");
+        }
+
+        $fixing->delete();
+
+        return $this->deleteSuccessResponse("Fixing déplacé vers la corbeille avec succès.");
     }
 
     public function restore(string $id)
     {
-        // Code here...
+        $fixing = Fixing::withTrashed()->find($id);
+
+        if(! $fixing){
+            return $this->errorResponse("Fixing introuvable");
+        }
+
+        $fixing->restore();
+
+        return $this->deleteSuccessResponse("Fixing restoré avec succès.");
     }
 
     public function forceDelete(string $id)
     {
-        // Code here...
+        $fixing = Fixing::withTrashed()->find($id);
+
+        if(! $fixing){
+            return $this->errorResponse("Fixing introuvable");
+        }
+
+        $fixing->forceDelete();
+
+        return $this->deleteSuccessResponse("Fixing supprimé définitivement avec succès.");
     }
 }

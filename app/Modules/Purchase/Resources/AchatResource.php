@@ -15,7 +15,7 @@ class AchatResource extends JsonResource
             'id' => $this->id ?? null,
             'reference' => $this->reference,
             'commentaire' => $this->commentaire,
-            'poids_total' => $this->barres->sum('poid_pure'),
+            'poids_total' => number_format($this->barres->sum('poid_pure'), 3),
             'carrat_moyenne' => $this->carratMoyenne($this->id),
             'etat_achat' => $this->etat,
             'achat_status' => $this->status,
