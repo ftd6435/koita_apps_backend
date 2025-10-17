@@ -153,41 +153,45 @@ class ExpeditionService
     }
 
     public function calculerPoidsEtCarat(int $id_init_livraison): array
-    {
-        // 🔹 Récupérer toutes les expéditions liées
-        $expeditions = Expedition::where('id_init_livraison', $id_init_livraison)
-            ->with('fondation')
-            ->get();
+{
+    // 🔹 Récupérer toutes les expéditions liées
+    $expeditions = Expedition::where('id_init_livraison', $id_init_livraison)
+        ->with('fondation')
+        ->get();
 
-        if ($expeditions->isEmpty()) {
-            return [
-                'poids_total' => 0,
-                'carrat_moyen' => 0,
-            ];
-        }
-
-        $poidsTotal         = 0;
-        $sommeCaratPonderee = 0;
-
-        foreach ($expeditions as $expedition) {
-            if ($expedition->fondation) {
-                $poids = (float) $expedition->fondation->poids_fondu;
-                $carat = (float) $expedition->fondation->carrat_fondu;
-
-                $poidsTotal += $poids;
-                $sommeCaratPonderee += $poids * $carat;
-            }
-        }
-
-        // 🔹 Calcul du carat moyen pondéré
-        $caratMoyen = $poidsTotal > 0
-            ? round($sommeCaratPonderee / $poidsTotal, 3)
-            : 0;
-
+    if ($expeditions->isEmpty()) {
         return [
-            'poids_total' => round($poidsTotal, 3),
-            'carrat_moyen' => $caratMoyen,
+            'poids_total'  => 0,
+            'carrat_moyen' => 0,
         ];
     }
+
+    $poidsTotal         = 0;
+    $sommeCaratPonderee = 0;
+
+    foreach ($expeditions as $expedition) {
+        if ($expedition->fondation) {
+            $poids = (float) $expedition->fondation->poids_fondu;
+            $carat = (float) $expedition->fondation->carrat_fondu;
+
+            $poidsTotal += $poids;
+            $sommeCaratPonderee += $poids * $carat;
+        }
+    }
+
+    // 🔹 Calcul du carat moyen pondéré
+    $caratMoyen = $poidsTotal > 0
+        ? $sommeCaratPonderee / $poidsTotal
+        : 0;
+
+    // 🔹 Troncage à deux décimales (sans arrondi)
+    $caratMoyen = floor($caratMoyen * 100) / 100;
+
+    return [
+        'poids_total'  => floor($poidsTotal * 1000) / 1000, // 3 décimales tronquées pour le poids
+        'carrat_moyen' => $caratMoyen,
+    ];
+}
+
 
 }
