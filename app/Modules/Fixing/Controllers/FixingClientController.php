@@ -5,6 +5,7 @@ namespace App\Modules\Fixing\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Fixing\Requests\StoreFixingClientRequest;
 use App\Modules\Fixing\Services\FixingClientService;
+use App\Modules\Fixing\Requests\UpdateFixingClientRequest;
 
 class FixingClientController extends Controller
 {
@@ -39,6 +40,11 @@ class FixingClientController extends Controller
         return $this->fixingClientService->getOne($id);
     }
 
+
+     public function update(UpdateFixingClientRequest $request, int $id)
+    {
+        return $this->fixingClientService->update($id, $request->validated());
+    }
     /**
      * 🔹 Suppression d’un fixing client
      */

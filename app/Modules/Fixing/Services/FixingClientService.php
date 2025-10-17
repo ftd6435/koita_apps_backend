@@ -106,6 +106,44 @@ class FixingClientService
         }
     }
 
+    public function update(int $id, array $payload)
+    {
+        DB::beginTransaction();
+
+        try {
+            $fixing = FixingClient::find($id);
+
+            if (! $fixing) {
+                return response()->json([
+                    'status'  => 404,
+                    'message' => 'Fixing client introuvable.',
+                ], 404);
+            }
+
+            // 🔹 Mise à jour des champs de base
+            $payload['updated_by'] = Auth::id();
+            $fixing->update($payload);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Fixing client mis à jour avec succès.',
+                'data'    => new FixingClientResource(
+                    $fixing->load(['client', 'devise', 'fondations', 'createur', 'modificateur'])
+                ),
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => 500,
+                'message' => 'Erreur lors de la mise à jour du fixing client.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * 🔹 Supprimer un fixing client
      */
