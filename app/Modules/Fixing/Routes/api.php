@@ -6,10 +6,13 @@ use App\Modules\Fixing\Controllers\FixingClientController;
 use App\Modules\Fixing\Controllers\FixingController;
 use Illuminate\Support\Facades\Route;
 use App\Modules\Fixing\Controllers\InitLivraisonController;
+use App\Modules\Settings\Controllers\ClientController;
 
 Route::middleware('auth:sanctum')->prefix('v1/fixings')->group(function () {
     Route::apiResource('init-livraisons', InitLivraisonController::class);
      Route::apiResource('clients-fixings', FixingClientController::class);
+     Route::get('clients/{id}/livraisons-non-fixees', [ClientController::class, 'livraisonsNonFixees']);
+
 
     Route::get('fixing-fournisseurs/restore/{id}', [FixingController::class, 'restore']);
     Route::put('fixing-fournisseurs/status/{id}', [FixingController::class, 'status']);

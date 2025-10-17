@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Modules\Settings\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -58,4 +57,10 @@ class ClientController extends Controller
     {
         return $this->clientService->delete($id);
     }
+    public function livraisonsNonFixees(int $id)
+    {
+        return $this->clientService->getLivraisonsNonFixees($id);
+
+    }
+
 }

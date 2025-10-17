@@ -5,6 +5,8 @@ namespace App\Modules\Settings\Services;
 use App\Modules\Settings\Models\Client;
 use App\Modules\Settings\Resources\ClientResource;
 use Illuminate\Support\Facades\Auth;
+use App\Modules\Fixing\Models\InitLivraison;
+use App\Modules\Settings\Resources\LivraisonNonFixeeResource;
 use Exception;
 
 class ClientService
@@ -106,6 +108,8 @@ class ClientService
         }
     }
 
+
+
     /**
      * 🔹 Récupérer un client spécifique avec ses livraisons
      */
@@ -128,4 +132,29 @@ class ClientService
             ]);
         }
     }
+
+ 
+
+public function getLivraisonsNonFixees(int $clientId)
+{
+    try {
+        $livraisons = InitLivraison::with(['fondations'])
+            ->where('id_client', $clientId)
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Livraisons non fixées récupérées avec succès.',
+            'data'    => LivraisonNonFixeeResource::collection($livraisons),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => 500,
+            'message' => 'Erreur lors de la récupération des livraisons non fixées.',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
+
 }
