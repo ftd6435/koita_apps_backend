@@ -1,13 +1,12 @@
 <?php
-
 namespace App\Modules\Fixing\Services;
 
 use App\Modules\Fixing\Models\FixingClient;
 use App\Modules\Fixing\Resources\FixingClientResource;
 use App\Modules\Fondation\Models\Fondation;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class FixingClientService
 {
@@ -25,7 +24,7 @@ class FixingClientService
             $fixing = FixingClient::create($payload);
 
             // ✅ Mise à jour des fondations associées (si fournies)
-            if (!empty($payload['id_barre_fondu']) && is_array($payload['id_barre_fondu'])) {
+            if (! empty($payload['id_barre_fondu']) && is_array($payload['id_barre_fondu'])) {
                 Fondation::whereIn('id', $payload['id_barre_fondu'])
                     ->update(['id_fixing' => $fixing->id]);
             }
@@ -85,7 +84,7 @@ class FixingClientService
             $fixing = FixingClient::with(['client', 'devise', 'fondations', 'createur', 'modificateur'])
                 ->find($id);
 
-            if (!$fixing) {
+            if (! $fixing) {
                 return response()->json([
                     'status'  => 404,
                     'message' => 'Fixing client introuvable.',
@@ -107,7 +106,6 @@ class FixingClientService
         }
     }
 
-
     /**
      * 🔹 Supprimer un fixing client
      */
@@ -118,7 +116,7 @@ class FixingClientService
         try {
             $fixing = FixingClient::find($id);
 
-            if (!$fixing) {
+            if (! $fixing) {
                 return response()->json([
                     'status'  => 404,
                     'message' => 'Fixing client introuvable.',
@@ -154,26 +152,29 @@ class FixingClientService
             ];
         }
 
-        $densite = 22;
-        $bourse = (float) $fixing->bourse;
-        $discompte = (float) $fixing->discompte;
+        $densite      = 22;
+        $bourse       = (float) $fixing->bourse;
+        $discompte    = (float) $fixing->discompte;
         $prixUnitaire = ($bourse / 34) - $discompte;
 
-        $fondations = Fondation::where('id_fixing', $fixing->id)->get();
-        $details = [];
-        $totalFacture = 0;
+        $fondations         = Fondation::where('id_fixing', $fixing->id)->get();
+        $details            = [];
+        $totalFacture       = 0;
+        $poidsTotal         = 0;
+        $sommeCaratPonderee = 0;
 
         foreach ($fondations as $fondation) {
             $poids = (float) $fondation->poids_fondu;
             $carat = (float) $fondation->carrat_fondu;
 
-            // 💰 Calcul brut
+            // Calcul du montant
             $montant = ($prixUnitaire / $densite) * $poids * $carat;
 
-            // 🔹 Troncature à 2 décimales sans arrondir
+            // Troncature à 2 décimales sans arrondir
             $prixUnitaireTronque = $this->truncate($prixUnitaire, 2);
-            $montantTronque = $this->truncate($montant, 2);
+            $montantTronque      = $this->truncate($montant, 2);
 
+            // Ajout des détails de chaque fondation
             $details[] = [
                 'id_fondation'  => $fondation->id,
                 'reference'     => $fondation->initFondation?->reference ?? null,
@@ -183,15 +184,23 @@ class FixingClientService
                 'montant'       => $montantTronque,
             ];
 
+            // Cumuls
             $totalFacture += $montantTronque;
+            $poidsTotal += $poids;
+            $sommeCaratPonderee += $poids * $carat;
         }
 
+        // Calcul du carat moyen pondéré
+        $carratMoyen = $poidsTotal > 0 ? $sommeCaratPonderee / $poidsTotal : 0;
+
         return [
-            'status'         => 200,
-            'id_fixing'      => $fixing->id,
-            'prix_unitaire'  => $this->truncate($prixUnitaire, 2),
-            'fondations'     => $details,
-            'total_facture'  => $this->truncate($totalFacture, 2),
+            'status'        => 200,
+            'id_fixing'     => $fixing->id,
+            'prix_unitaire' => $this->truncate($prixUnitaire, 2),
+            'poids_total'   => $this->truncate($poidsTotal, 2),
+            'carrat_moyen'  => $this->truncate($carratMoyen, 2),
+            'fondations'    => $details,
+            'total_facture' => $this->truncate($totalFacture, 2),
         ];
     }
 

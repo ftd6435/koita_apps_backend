@@ -13,13 +13,8 @@ class FixingClientResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // 🔹 Récupération des données calculées
+        // 🔹 Récupération du calcul complet depuis le service
         $calculs = app(FixingClientService::class)->calculerFacture($this->id);
-
-        // 🔹 On extrait les valeurs pour une lecture claire
-        $prixUnitaire  = $calculs['prix_unitaire'] ?? 0;
-        $totalFacture  = $calculs['total_facture'] ?? 0;
-        $details       = $calculs['fondations'] ?? [];
 
         return [
             'id'            => $this->id,
@@ -27,32 +22,34 @@ class FixingClientResource extends JsonResource
             'carrat_moyen'  => (float) $this->carrat_moyen,
             'discompte'     => (float) $this->discompte,
             'bourse'        => (float) $this->bourse,
-            'prix_unitaire' => (float) $prixUnitaire,
+            'prix_unitaire' => (float) ($calculs['prix_unitaire'] ?? 0),
             'status'        => $this->status ?? 'en attente',
 
             // 🔹 Relations principales
-            'client'  => new ClientResource($this->whenLoaded('client')),
-            'devise'  => new DeviseResource($this->whenLoaded('devise')),
+            'client'        => new ClientResource($this->whenLoaded('client')),
+            'devise'        => new DeviseResource($this->whenLoaded('devise')),
 
             // 🔹 Fondations liées à ce fixing client
-            'fondations' => FondationResource::collection(
+            'fondations'    => FondationResource::collection(
                 $this->whenLoaded('fondations')
             ),
 
-            // 🔹 Données issues du calcul complet
+            // 🔹 Données calculées
             'calculs' => [
-                'prix_unitaire' => $prixUnitaire,
-                'total_facture' => $totalFacture,
-                'details'       => $details,
+                'prix_unitaire' => $calculs['prix_unitaire'] ?? 0,
+                'poids_total'   => $calculs['poids_total'] ?? 0,
+                'carrat_moyen'  => $calculs['carrat_moyen'] ?? 0,
+                'total_facture' => $calculs['total_facture'] ?? 0,
+                'details'       => $calculs['fondations'] ?? [],
             ],
 
             // 🔹 Audit
-            'created_by' => $this->createur?->name,
-            'updated_by' => $this->modificateur?->name,
+            'created_by'    => $this->createur?->name,
+            'updated_by'    => $this->modificateur?->name,
 
             // 🔹 Dates formatées
-            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
+            'created_at'    => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at'    => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }
