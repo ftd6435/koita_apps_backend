@@ -16,6 +16,7 @@ class Fondation extends Model
     protected $fillable = [
         'ids_barres',
         'id_init_fondation',
+        'statut',
         'poids_fondu',
         'carrat_fondu',
         'poids_dubai',
