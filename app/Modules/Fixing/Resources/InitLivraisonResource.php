@@ -32,7 +32,7 @@ class InitLivraisonResource extends JsonResource
                 $this->whenLoaded('expeditions')
             ),
             'poids_total' => $calculs['poids_total'],
-            'carat_moyen' => $calculs['carat_moyen'],
+            'carrat_moyen' => $calculs['carrat_moyen'],
             // 🔹 Audit
             'created_by'  => $this->createur?->name,
             'modify_by'   => $this->modificateur?->name,
