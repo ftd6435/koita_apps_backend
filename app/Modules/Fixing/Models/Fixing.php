@@ -7,6 +7,7 @@ use App\Modules\Administration\Models\User;
 use App\Modules\Settings\Models\Devise;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Fixing extends Model
@@ -34,6 +35,11 @@ class Fixing extends Model
     public function devise(): BelongsTo
     {
         return $this->belongsTo(Devise::class);
+    }
+
+    public function fixingBarres() : HasMany
+    {
+        return $this->hasMany(FixingBarre::class)->whereNull('fixing_barre.deleted_at');
     }
 
     public function createdBy(): BelongsTo

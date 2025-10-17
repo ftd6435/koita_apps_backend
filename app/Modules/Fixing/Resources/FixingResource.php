@@ -1,24 +1,19 @@
 <?php
 
-namespace App\Modules\Purchase\Resources;
+namespace App\Modules\Fixing\Resources;
 
 use App\Traits\Helper;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AchatResource extends JsonResource
+class FixingResource extends JsonResource
 {
     use Helper;
 
-    public function toArray($request): array
+    public function toArray(Request $request)
     {
         return [
-            'id' => $this->id ?? null,
-            'reference' => $this->reference,
-            'commentaire' => $this->commentaire,
-            'poids_total' => $this->barres->sum('poid_pure'),
-            'carrat_moyenne' => $this->carratMoyenne($this->id),
-            'etat_achat' => $this->etat,
-            'achat_status' => $this->status,
+            'id' => $this->id,
 
             // Fournisseur relationship
             'fournisseur' => $this->whenLoaded('fournisseur', function () {
@@ -31,27 +26,30 @@ class AchatResource extends JsonResource
                 ];
             }),
 
-            // Lot relationship
-            'lot' => $this->whenLoaded('lot', function () {
+            // Devise relationship
+            'devise' => $this->devise ? $this->whenLoaded('devise', function () {
                 return [
-                    'id' => $this->lot->id ?? null,
-                    'libelle' => $this->lot->libelle ?? null,
-                    'commentaire' => $this->lot->commentaire ?? null,
-                    'date' => $this->lot->date ?? null,
-                    'lot_status' => $this->lot->status ?? null,
+                    'id' => $this->devise->id ?? null,
+                    'libelle' => $this->devise->libelle ?? null,
+                    'symbole' => $this->devise->symbole ?? null,
+                    'taux_change' => $this->devise->taux_change ?? null,
                 ];
-            }),
+            }) : null,
 
-            'barres' => $this->barres->map(function ($barre) {
-                return [
-                    'id' => $barre->id ?? null,
-                    'poid_pure' => $barre->poid_pure ?? null,
-                    'carrat_pure' => $barre->carrat_pure ?? null,
-                    'densite' => $barre->densite ?? null,
-                    'barre_status' => $barre->status ?? null,
-                    'is_fixed' => $barre->is_fixed,
-                ];
-            }),
+            // Fixing Barre relationship
+            'fixing_barres' => FixingBarreResource::collection($this->whenLoaded('fixingBarres')),
+
+            'poids_provisoir' => $this->poids_pro,
+            'carrat_provisoir' => $this->carrat_moyenne,
+
+            'poids_fixing' => $this->poidsFixing($this->id),
+            'carrat_fixing' => $this->carratFixing($this->id),
+            'montant_total' => $this->montantFixing($this->id),
+
+            'discount' => $this->discount ?? null,
+            'bourse' => $this->bourse ?? null,
+            'unit_price' => $this->unit_price ?? null,
+            'status_fixing' => $this->status,
 
             // Created and updated by users
             'createdBy' => $this->createdBy ? [
@@ -72,8 +70,9 @@ class AchatResource extends JsonResource
                 'role' => $this->updatedBy->role,
             ] : null,
 
-            'created_at' => $this->created_at->format('d-m-Y H:i:s'),
-            'updated_at' => $this->updated_at->format('d-m-Y H:i:s'),
+            // 🔹 Dates formatées
+            'created_at' => $this->created_at ? $this->created_at->format('d-m-Y H:i:s') : null,
+            'updated_at' => $this->updated_at ? $this->updated_at->format('d-m-Y H:i:s') : null,
         ];
     }
 }

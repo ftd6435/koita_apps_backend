@@ -3,8 +3,10 @@
 namespace App\Modules\Purchase\Models;
 
 use App\Modules\Administration\Models\User;
+use App\Modules\Fixing\Models\FixingBarre;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Barre extends Model
@@ -25,6 +27,11 @@ class Barre extends Model
     public function achat() : BelongsTo
     {
         return $this->belongsTo(Achat::class)->whereNull('achats.deleted_at');
+    }
+
+    public function fixingBarres() : HasMany
+    {
+        return $this->hasMany(FixingBarre::class)->whereNull('fixing_barre.deleted_at');
     }
 
     public function createdBy(): BelongsTo
