@@ -22,12 +22,15 @@ class StoreExpeditionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 🔹 Le tableau des fondations fondues
-            'id_barre_fondu'        => 'required|array|min:1',
-            'id_barre_fondu.*'      => 'integer|distinct|exists:fondations,id',
+            // 🔹 Le client concerné
+            'id_client'          => 'required|integer|exists:clients,id',
 
-            // 🔹 L’initiation de livraison liée
-            'id_init_livraison'     => 'required|integer|exists:init_livraisons,id',
+            // 🔹 Les fondations à expédier
+            'id_barre_fondu'     => 'required|array|min:1',
+            'id_barre_fondu.*'   => 'integer|distinct|exists:fondations,id',
+
+            // 🔹 L’initiation de livraison (si déjà créée)
+            'id_init_livraison'  => 'nullable|integer|exists:init_livraisons,id',
         ];
     }
 
@@ -37,19 +40,22 @@ class StoreExpeditionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'id_barre_fondu.required'    => 'Le champ id_barre_fondu est obligatoire.',
-            'id_barre_fondu.array'       => 'Le champ id_barre_fondu doit être un tableau d’identifiants.',
-            'id_barre_fondu.min'         => 'Il faut au moins une fondation fondue à expédier.',
-            'id_barre_fondu.*.integer'   => 'Chaque identifiant de fondation doit être un entier.',
-            'id_barre_fondu.*.distinct'  => 'Les identifiants de fondation doivent être uniques.',
-            'id_barre_fondu.*.exists'    => 'Certains identifiants de fondation n’existent pas.',
-            'id_init_livraison.required' => 'Le champ id_init_livraison est obligatoire.',
-            'id_init_livraison.exists'   => 'L’initialisation de livraison sélectionnée est invalide.',
+            'id_client.required'        => 'Le client associé à l’expédition est obligatoire.',
+            'id_client.exists'          => 'Le client sélectionné est invalide.',
+
+            'id_barre_fondu.required'   => 'Le champ id_barre_fondu est obligatoire.',
+            'id_barre_fondu.array'      => 'Le champ id_barre_fondu doit être un tableau d’identifiants.',
+            'id_barre_fondu.min'        => 'Il faut au moins une fondation fondue à expédier.',
+            'id_barre_fondu.*.integer'  => 'Chaque identifiant de fondation doit être un entier.',
+            'id_barre_fondu.*.distinct' => 'Les identifiants de fondation doivent être uniques.',
+            'id_barre_fondu.*.exists'   => 'Certains identifiants de fondation n’existent pas.',
+
+            'id_init_livraison.exists'  => 'L’initialisation de livraison sélectionnée est invalide.',
         ];
     }
 
     /**
-     * Réponse JSON en cas d’erreur de validation.
+     * 🔹 Réponse JSON en cas d’erreur de validation
      */
     protected function failedValidation(Validator $validator)
     {

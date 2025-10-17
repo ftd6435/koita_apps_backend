@@ -3,6 +3,7 @@
 namespace App\Modules\Settings\Models;
 
 use App\Modules\Administration\Models\User;
+use App\Modules\Fixing\Models\InitLivraison;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -44,6 +45,11 @@ class Client extends Model
     {
         return $this->belongsTo(User::class, 'modify_by');
     }
+    public function initLivraisons()
+{
+    return $this->hasMany(InitLivraison::class, 'id_client');
+}
+
 
     // ==============================
     // 🔹 ACCESSORS (si besoin)

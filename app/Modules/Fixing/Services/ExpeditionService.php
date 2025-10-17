@@ -1,14 +1,13 @@
 <?php
-
 namespace App\Modules\Fixing\Services;
 
 use App\Modules\Fixing\Models\Expedition;
 use App\Modules\Fixing\Models\InitLivraison;
-use App\Modules\Fondation\Models\Fondation;
 use App\Modules\Fixing\Resources\ExpeditionResource;
+use App\Modules\Fondation\Models\Fondation;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class ExpeditionService
 {
@@ -22,71 +21,42 @@ class ExpeditionService
         DB::beginTransaction();
 
         try {
-            // ✅ Vérification du client
-            if (empty($payload['id_client'])) {
-                return response()->json([
-                    'status'  => 422,
-                    'message' => 'Le champ id_client est obligatoire.',
-                ], 422);
-            }
 
-            // ✅ Vérification du tableau de fondations
-            if (empty($payload['id_barre_fondu']) || !is_array($payload['id_barre_fondu'])) {
-                return response()->json([
-                    'status'  => 422,
-                    'message' => 'Le champ id_barre_fondu doit être un tableau d’identifiants de fondations.',
-                ], 422);
-            }
-
-            // ==========================================
-            // 🔹 1️⃣ Création de l’init livraison
-            // ==========================================
+            // ✅ 2️⃣ Création automatique de l’init livraison
             $initLivraison = InitLivraison::create([
                 'id_client'  => $payload['id_client'],
                 'status'     => 'encours',
                 'created_by' => Auth::id(),
             ]);
 
-            // ==========================================
-            // 🔹 2️⃣ Création des expéditions liées
-            // ==========================================
-            $resultats = [];
+            // ✅ 3️⃣ Création des expéditions liées
+            $expeditions = collect();
 
             foreach ($payload['id_barre_fondu'] as $idFondation) {
+                // Vérifie que la fondation existe
                 $fondation = Fondation::find($idFondation);
 
-                if (!$fondation) {
-                    DB::rollBack();
-                    return response()->json([
-                        'status'  => 404,
-                        'message' => "Fondation introuvable (ID: {$idFondation}).",
-                    ], 404);
-                }
+                // ✅ Met à jour la fondation : marquée comme fixée
+                $fondation->update(['is_fixed' => true]);
 
+                // ✅ Crée l’expédition liée à la fondation
                 $expedition = Expedition::create([
                     'id_barre_fondu'    => $idFondation,
                     'id_init_livraison' => $initLivraison->id,
                     'created_by'        => Auth::id(),
                 ]);
 
-                $resultats[] = new ExpeditionResource($expedition);
+                $expeditions->push($expedition);
             }
 
             DB::commit();
 
             return response()->json([
-                'status'  => 201,
+                'status'  => 200,
                 'message' => 'Expédition(s) créée(s) avec succès.',
-                'data'    => [
-                    'init_livraison' => [
-                        'id'        => $initLivraison->id,
-                        'reference' => $initLivraison->reference,
-                        'id_client' => $initLivraison->id_client,
-                        'status'    => $initLivraison->status,
-                    ],
-                    'expeditions' => $resultats,
-                ],
+
             ]);
+
         } catch (Exception $e) {
             DB::rollBack();
 
@@ -104,7 +74,7 @@ class ExpeditionService
     public function getAll()
     {
         try {
-            $expeditions = Expedition::with(['fondation', 'initLivraison', 'createur', 'modificateur'])
+            $expeditions = Expedition::with(['fondation', 'initLivraison.client', 'createur', 'modificateur'])
                 ->orderByDesc('id')
                 ->get();
 
@@ -128,10 +98,10 @@ class ExpeditionService
     public function getOne(int $id)
     {
         try {
-            $expedition = Expedition::with(['fondation', 'initLivraison', 'createur', 'modificateur'])
+            $expedition = Expedition::with(['fondation', 'initLivraison.client', 'createur', 'modificateur'])
                 ->find($id);
 
-            if (!$expedition) {
+            if (! $expedition) {
                 return response()->json([
                     'status'  => 404,
                     'message' => 'Expédition non trouvée.',
@@ -160,7 +130,7 @@ class ExpeditionService
         try {
             $expedition = Expedition::find($id);
 
-            if (!$expedition) {
+            if (! $expedition) {
                 return response()->json([
                     'status'  => 404,
                     'message' => 'Expédition non trouvée.',
