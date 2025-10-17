@@ -14,6 +14,7 @@ class StoreBarreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            '*.id' => ['nullable', 'exists:barres,id'],
             '*.achat_id' => ['required', 'exists:achats,id'],
             '*.poid_pure' => ['required', 'numeric', 'min:0'],
             '*.carrat_pure' => ['required', 'numeric', 'min:0'],
@@ -24,6 +25,8 @@ class StoreBarreRequest extends FormRequest
     public function messages(): array
     {
         return [
+            '*.id.exists' => 'Cette barre spécifié est invalide ou n’existe pas.',
+
             '*.achat_id.required' => 'Le champ achat_id est obligatoire.',
             '*.achat_id.exists' => 'L’achat spécifié est invalide ou n’existe pas.',
 

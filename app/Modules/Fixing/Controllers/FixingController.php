@@ -108,9 +108,11 @@ class FixingController extends Controller
         DB::beginTransaction();
 
         try {
-            $devise = ($fields['devise_id'] != null) ? Devise::where('id', $fields['devise_id'])->pluck('symbole') : $fixing->devise->symbole;
+            $devise = !empty($fields['devise_id'])
+                        ? Devise::where('id', $fields['devise_id'])->value('symbole')
+                        : optional($fixing->devise)->symbole;
 
-            if (Str::upper($devise) == 'USD') {
+            if ($devise && Str::upper($devise) == 'USD') {
                 $bourse = $fields['bourse'] ?? 0;
                 $discount = $fields['discount'] ?? 0;
 

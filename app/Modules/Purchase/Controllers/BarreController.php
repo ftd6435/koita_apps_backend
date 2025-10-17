@@ -39,25 +39,60 @@ class BarreController extends Controller
 
     public function store(StoreBarreRequest $request)
     {
-        $data = $request->validated();
-
         DB::beginTransaction();
 
         try {
-            $data = collect($request->validated())->map(function ($item){
-                    $item['created_by'] = Auth::id();
-                    $item['created_at'] = Carbon::now();
-                    $item['updated_at'] = Carbon::now();
-                return $item;
-            })->toArray();
+            $barres = collect($request->validated());
+            $now = Carbon::now();
 
-            Barre::insert($data);
+            $insertData = [];
+            $updateCount = 0;
+            $insertCount = 0;
+
+            foreach ($barres as $item) {
+                // If ID exists → update existing barre
+                if (!empty($item['id'])) {
+                    Barre::where('id', $item['id'])->update([
+                        'achat_id'   => $item['achat_id'],
+                        'poid_pure'  => $item['poid_pure'],
+                        'carrat_pure'=> $item['carrat_pure'],
+                        'densite'    => $item['densite'] ?? null,
+                        'updated_by' => Auth::id(),
+                        'updated_at' => $now,
+                    ]);
+                    $updateCount++;
+                }
+                // Otherwise → prepare for insertion
+                else {
+                    $insertData[] = [
+                        'achat_id'   => $item['achat_id'],
+                        'poid_pure'  => $item['poid_pure'],
+                        'carrat_pure'=> $item['carrat_pure'],
+                        'densite'    => $item['densite'] ?? null,
+                        'created_by' => Auth::id(),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                    $insertCount++;
+                }
+            }
+
+            // Bulk insert new barres
+            if (!empty($insertData)) {
+                Barre::insert($insertData);
+            }
 
             DB::commit();
 
-            $count = count($data);
+            $messageParts = [];
+            if ($insertCount > 0) $messageParts[] = "$insertCount nouvelles barres ajoutées";
+            if ($updateCount > 0) $messageParts[] = "$updateCount barres mises à jour";
+            $message = implode(' et ', $messageParts) . ' avec succès.';
 
-            return $this->deleteSuccessResponse("$count barres ont été ajouté a l'achat avec succès.");
+            return response()->json([
+                'status' => 1,
+                'message' => $message,
+            ]);
 
         } catch (Throwable $e) {
             DB::rollBack();
