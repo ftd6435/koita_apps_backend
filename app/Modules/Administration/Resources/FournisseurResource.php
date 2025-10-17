@@ -15,24 +15,10 @@ class FournisseurResource extends JsonResource
             'name' => $this->name,
             'adresse' => $this->adresse,
             'telephone' => $this->telephone ?? null,
-            'image' => is_null($this->image)  ? asset('/images/male.jpg') : asset('/storage/images/fournisseurs/'.$this->image),
+            'image' => is_null($this->image) ? asset('/images/male.jpg') : asset('/storage/images/fournisseurs/'.$this->image),
 
             // ✅ Achats relationship
-            'achats' => $this->achats->map(function ($achat){
-                return [
-                    'id' => $achat->id ?? null,
-                    'reference' => $achat->reference ?? null,
-                    'lot' => [
-                        'id' => $achat->lot->id ?? null,
-                        'libelle' => $achat->lot->libelle ?? null,
-                        'commentaire' => $achat->lot->commentaire ?? null,
-                        'lot_status' => $achat->lot->status ?? null,
-                    ],
-                    'commentaire' => $achat->commentaire ?? null,
-                    'etat_achat' => $achat->etat ?? null,
-                    'achat_status' => $achat->status ?? null,
-                ];
-            }),
+            'achats' => AchatResource::collection($this->whenLoaded('achats')),
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,
