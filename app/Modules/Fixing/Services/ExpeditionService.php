@@ -25,7 +25,7 @@ class ExpeditionService
             // ✅ 2️⃣ Création automatique de l’init livraison
             $initLivraison = InitLivraison::create([
                 'id_client'  => $payload['id_client'],
-                'status'     => 'encours',
+                'statut'     => 'encours',
                 'created_by' => Auth::id(),
             ]);
 
