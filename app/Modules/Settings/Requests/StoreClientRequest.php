@@ -22,11 +22,20 @@ class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nom'       => 'required|string|max:100',
-            'prenom'    => 'required|string|max:100',
-            'telephone' => 'nullable|string|max:20|unique:clients,telephone',
-            'adresse'   => 'nullable|string|max:255',
-            'email'     => 'nullable|email|unique:clients,email',
+            // 🔹 Nom complet (obligatoire)
+            'nom_complet'     => 'required|string|max:150',
+
+            // 🔹 Raison sociale (facultative, pour entreprises)
+            'raison_sociale'  => 'nullable|string|max:150',
+
+            // 🔹 Localisation
+            'pays'            => 'nullable|string|max:100',
+            'ville'           => 'nullable|string|max:100',
+            'adresse'         => 'nullable|string|max:255',
+
+            // 🔹 Contact
+            'telephone'       => 'nullable|string|max:20|unique:clients,telephone',
+            'email'           => 'nullable|email|max:150|unique:clients,email',
         ];
     }
 
@@ -36,11 +45,12 @@ class StoreClientRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nom.required'       => 'Le nom du client est obligatoire.',
-            'prenom.required'    => 'Le prénom du client est obligatoire.',
-            'email.email'        => 'L’adresse email n’est pas valide.',
-            'email.unique'       => 'Cet email est déjà utilisé.',
-            'telephone.unique'   => 'Ce numéro de téléphone existe déjà.',
+            'nom_complet.required'     => 'Le nom complet du client est obligatoire.',
+            'nom_complet.string'       => 'Le nom complet doit être une chaîne de caractères.',
+            'raison_sociale.string'    => 'La raison sociale doit être une chaîne valide.',
+            'email.email'              => 'L’adresse email n’est pas valide.',
+            'email.unique'             => 'Cet email est déjà utilisé.',
+            'telephone.unique'         => 'Ce numéro de téléphone existe déjà.',
         ];
     }
 
@@ -51,7 +61,7 @@ class StoreClientRequest extends FormRequest
     {
         throw new ValidationException($validator, response()->json([
             'status'  => 'error',
-            'message' => 'Erreur de validation',
+            'message' => 'Erreur de validation.',
             'errors'  => $validator->errors(),
         ], 422));
     }

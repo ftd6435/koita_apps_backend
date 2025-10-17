@@ -25,7 +25,7 @@ class FondationResource extends JsonResource
             'poids_dubai'  => (float) $this->poids_dubai,
             'carrat_dubai' => (float) $this->carrat_dubai,
             'is_fixed'     => (bool) $this->is_fixed,
-
+             'statut'=>$this->statut,
             // 🔹 Liste des barres fondues associées
             'barres'       => BarreResource::collection($barres),
 

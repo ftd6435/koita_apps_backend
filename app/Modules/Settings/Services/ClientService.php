@@ -21,7 +21,9 @@ class ClientService
             return response()->json([
                 'status'  => 200,
                 'message' => 'Client créé avec succès.',
-                'data'    => new ClientResource($client),
+                'data'    => new ClientResource(
+                    $client->load(['createur', 'modificateur', 'initLivraisons'])
+                ),
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -45,7 +47,9 @@ class ClientService
             return response()->json([
                 'status'  => 200,
                 'message' => 'Client mis à jour avec succès.',
-                'data'    => new ClientResource($client),
+                'data'    => new ClientResource(
+                    $client->load(['createur', 'modificateur', 'initLivraisons'])
+                ),
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -79,17 +83,18 @@ class ClientService
     }
 
     /**
-     * 🔹 Récupérer tous les clients
+     * 🔹 Récupérer tous les clients avec leurs livraisons
      */
     public function getAll()
     {
         try {
-            $clients = Client::with(['createur', 'modificateur'])
+            $clients = Client::with(['createur', 'modificateur', 'initLivraisons'])
                 ->orderByDesc('created_at')
                 ->get();
 
             return response()->json([
                 'status' => 200,
+                'message' => 'Liste des clients récupérée avec succès.',
                 'data'   => ClientResource::collection($clients),
             ]);
         } catch (Exception $e) {
@@ -102,16 +107,17 @@ class ClientService
     }
 
     /**
-     * 🔹 Récupérer un client spécifique
+     * 🔹 Récupérer un client spécifique avec ses livraisons
      */
     public function getOne(int $id)
     {
         try {
-            $client = Client::with(['createur', 'modificateur'])
+            $client = Client::with(['createur', 'modificateur', 'initLivraisons'])
                 ->findOrFail($id);
 
             return response()->json([
                 'status' => 200,
+                'message' => 'Client trouvé avec succès.',
                 'data'   => new ClientResource($client),
             ]);
         } catch (Exception $e) {

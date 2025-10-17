@@ -33,6 +33,11 @@ class FondationController extends Controller
         return $this->fondationService->getAll();
     }
 
+    public function listeFondationNonFondue()
+    {
+        return $this->fondationService->getAll1();
+    }
+
     /**
      * 🔹 Afficher les détails d’une fondation.
      */

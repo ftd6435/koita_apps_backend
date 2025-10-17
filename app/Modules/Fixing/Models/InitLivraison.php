@@ -18,7 +18,7 @@ class InitLivraison extends Model
         'reference',
         'id_client',
         'commentaire',
-        'statut',
+        'status',
         'created_by',
         'modify_by',
     ];
@@ -49,5 +49,30 @@ class InitLivraison extends Model
     public function modificateur()
     {
         return $this->belongsTo(User::class, 'modify_by');
+    }
+
+    /**
+     * Expéditions liées à cette livraison
+     */
+    public function expeditions()
+    {
+        return $this->hasMany(Expedition::class, 'id_init_livraison');
+    }
+
+    // ==============================
+    // 🔹 GÉNÉRATION AUTO DE LA RÉFÉRENCE UNIQUE
+    // ==============================
+
+    protected static function booted()
+    {
+        /**
+         * Après création, on génère une référence unique à partir de l'ID réel.
+         */
+        static::created(function ($initLivraison) {
+            if (empty($initLivraison->reference)) {
+                $reference = 'LIV-' . now()->format('Ymd') . '-' . str_pad($initLivraison->id, 4, '0', STR_PAD_LEFT);
+                $initLivraison->updateQuietly(['reference' => $reference]);
+            }
+        });
     }
 }

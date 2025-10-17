@@ -4,6 +4,7 @@ namespace App\Modules\Fondation\Services;
 use App\Modules\Fondation\Models\Fondation;
 use App\Modules\Fondation\Models\InitFondation;
 use App\Modules\Fondation\Resources\FondationResource;
+use App\Modules\Fondation\Resources\FondationResource1;
 use App\Modules\Purchase\Models\Achat;
 use App\Modules\Purchase\Models\Barre;
 use Exception;
@@ -129,6 +130,28 @@ class FondationService
             ]);
         }
     }
+
+    public function getAll1()
+{
+    try {
+        // ✅ Récupérer uniquement les fondations non fixées
+        $fondations = Fondation::where('is_fixed', false)
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Liste des fondations non fixées récupérée avec succès.',
+            'data'    => FondationResource1::collection($fondations),
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status'  => 500,
+            'message' => 'Erreur lors de la récupération des fondations.',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
 
     /**
      * 🔹 Récupérer une seule fondation.

@@ -2,6 +2,7 @@
 namespace App\Modules\Fondation\Models;
 
 use App\Modules\Administration\Models\User;
+use App\Modules\Fixing\Models\Expedition;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ class Fondation extends Model
     protected $fillable = [
         'ids_barres',
         'id_init_fondation',
+        'statut',
         'poids_fondu',
         'carrat_fondu',
         'poids_dubai',
@@ -65,6 +67,10 @@ class Fondation extends Model
             get: fn($value) => $value ? array_map('intval', explode(',', $value)) : [],
             set: fn($value) => is_array($value) ? implode(',', $value) : $value
         );
+    }
+    public function expedition()
+    {
+        return $this->hasOne(Expedition::class, 'id_barre_fondu');
     }
 
     /**
