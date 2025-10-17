@@ -25,6 +25,7 @@ class BarreResource extends JsonResource
                     'name' => $this->achat->fournisseur->name,
                     'adresse' => $this->achat->fournisseur->adresse ?? null,
                     'telephone' => $this->achat->fournisseur->telephone,
+                    'image' => is_null($this->achat->fournisseur->image) ? asset('/images/male.jpg') : asset('/storage/images/fournisseurs/'.$this->achat->fournisseur->image)
                 ],
                 'lot' => [
                     'id' => $this->achat->lot->id,

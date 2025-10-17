@@ -1,32 +1,40 @@
 <?php
 
-namespace App\Modules\Purchase\Models;
+namespace App\Modules\Fixing\Models;
 
+use App\Modules\Administration\Models\Fournisseur;
 use App\Modules\Administration\Models\User;
-use App\Modules\Fixing\Models\FixingBarre;
+use App\Modules\Settings\Models\Devise;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Barre extends Model
+class Fixing extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
-        'achat_id',
-        'poid_pure',
-        'carrat_pure',
-        'densite',
+        'fournisseur_id',
+        'poids_pro',
+        'carrat_moyenne',
+        'discount',
+        'bourse',
+        'unit_price',
+        'devise_id',
         'status',
-        'is_fixed',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
-    public function achat() : BelongsTo
+    public function fournisseur(): BelongsTo
     {
-        return $this->belongsTo(Achat::class)->whereNull('achats.deleted_at');
+        return $this->belongsTo(Fournisseur::class)->whereNull('fournisseurs.deleted_at');
+    }
+
+    public function devise(): BelongsTo
+    {
+        return $this->belongsTo(Devise::class);
     }
 
     public function fixingBarres() : HasMany
