@@ -34,7 +34,7 @@ class Fixing extends Model
 
     public function devise(): BelongsTo
     {
-        return $this->belongsTo(Devise::class);
+        return $this->belongsTo(Devise::class)->whereNull('devises.deleted_at');
     }
 
     public function fixingBarres() : HasMany
