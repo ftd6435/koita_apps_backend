@@ -2,6 +2,7 @@
 
 namespace App\Modules\Purchase\Resources;
 
+use App\Modules\Purchase\Models\Barre;
 use App\Traits\Helper;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,6 +12,21 @@ class AchatResource extends JsonResource
 
     public function toArray($request): array
     {
+        $barres_count = Barre::where('achat_id', $this->id)->count();
+        $fixed_barres = Barre::where('achat_id', $this->id)->where('is_fixed', true)->count();
+
+        $fixed_achat = "";
+
+        if($barres_count > 0){
+            if($barres_count == $fixed_barres){
+                $fixed_achat = "completer";
+            }elseif($fixed_barres > 0 && $fixed_barres < $barres_count){
+                $fixed_achat = "partiel";
+            }else{
+                $fixed_achat = "non fixer";
+            }
+        }
+
         return [
             'id' => $this->id ?? null,
             'reference' => $this->reference,
@@ -19,6 +35,7 @@ class AchatResource extends JsonResource
             'carrat_moyenne' => $this->carratMoyenne($this->id),
             'etat_achat' => $this->etat,
             'achat_status' => $this->status,
+            'fixed_achat' => $fixed_achat,
 
             // Fournisseur relationship
             'fournisseur' => $this->whenLoaded('fournisseur', function () {

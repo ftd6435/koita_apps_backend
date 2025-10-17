@@ -43,13 +43,11 @@ trait Helper
             }else{
                 $barre_fondue = Fondation::where('ids_barres', $fixing_barre->barre_id)->first();
 
-                // if($barre_fondue && $barre_fondue->status == 'corriger'){
-                //     $poids_total += $barre_fondue->poids_dubai;
-                // }else{
-                //     $poids_total += $barre_fondue->poids_fondu;
-                // }
-
-                $poids_total += $barre_fondue->poids_fondu;
+                if($barre_fondue && $barre_fondue->statut == 'corriger'){
+                    $poids_total += $barre_fondue->poids_dubai;
+                }else{
+                    $poids_total += $barre_fondue->poids_fondu;
+                }
             }
         }
 
@@ -84,13 +82,11 @@ trait Helper
             }else{
                 $barre_fondue = Fondation::where('ids_barres', $fixing_barre->barre_id)->first();
 
-                // if($barre_fondue && $barre_fondue->status == 'corriger'){
-                //     $multplication += $barre_fondue->poids_dubai * $barre_fondue->poids_dubai;
-                // }else{
-                //     $multplication += $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
-                // }
-
-                $multplication += $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
+                if($barre_fondue && $barre_fondue->statut == 'corriger'){
+                    $multplication += $barre_fondue->poids_dubai * $barre_fondue->poids_dubai;
+                }else{
+                    $multplication += $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
+                }
             }
         }
 
@@ -125,13 +121,11 @@ trait Helper
         if($barre->status == "fondue"){
             $barre_fondue = Fondation::where('ids_barres', $barre->id)->first();
 
-            // if($barre_fondue->status == 'corriger'){
-            //     $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_dubai * $barre_fondue->carrat_dubai;
-            // }else{
-            //     $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
-            // }
-
-            $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
+            if($barre_fondue->statut == 'corriger'){
+                $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_dubai * $barre_fondue->carrat_dubai;
+            }else{
+                $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
+            }
         }else{
             $montant = ($unit_price / $barre->densite) * $barre->poid_pre * $barre->carrat_pure;
         }
