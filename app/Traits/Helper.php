@@ -165,13 +165,15 @@ trait Helper
             return 0;
         }
 
-        $fixing_barres = FixingBarre::where('fixing_id', $fixing->id)->get();
+        // $fixing_barres = FixingBarre::where('fixing_id', $fixing->id)->get();
         $montant_total = 0;
         $unit_price = (float) ($fixing->unit_price ?? 0);
 
-        foreach ($fixing_barres as $barre) {
-            $montant_total += (float) $this->montantBarre($barre->barre_id, $unit_price);
-        }
+        // foreach ($fixing_barres as $barre) {
+        //     $montant_total += (float) $this->montantBarre($barre->barre_id, $unit_price);
+        // }
+
+        $montant_total = ($unit_price / 22) * (float) $this->poidsFixing($fixing->id) * (float) $this->carratFixing($fixing->id);
 
         return number_format($montant_total, 2);
     }
