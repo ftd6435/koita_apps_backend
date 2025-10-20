@@ -310,11 +310,12 @@ class FixingClientService
         // 🟢 Cas client local
         $prixUnitaire = ($bourse / 34) - $discompte;
 
-        $totalFacture =( $prixUnitaire /22)* $poidsTotal * $carratMoyen;
+        $totalFacture =( $prixUnitaire /22)* $pureteTotale * $carratMoyen;
     } else {
+         $prixUnitaire = ($bourse / 31.10347)  - ($discompte * 32);
         // 🟣 Cas client extra (Dubaï)
-        $totalFacture = ($bourse / 31.10347) * $pureteTotale - ($discompte * 32);
-        $prixUnitaire = null; // Non applicable
+        $totalFacture = $prixUnitaire*$pureteTotale;
+       
     }
 
     // === Étape 4 : Arrondis et préparation du retour ===
