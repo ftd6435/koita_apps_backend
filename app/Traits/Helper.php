@@ -26,7 +26,7 @@ trait Helper
 
         $moyenne = $somme > 0 ? ($multplication / $somme) : 0 ;
 
-        return number_format($moyenne, 2);
+        return $moyenne;
     }
 
     public function poidsFixing($fixing_id)
@@ -55,7 +55,7 @@ trait Helper
             }
         }
 
-        return number_format($poids_total, 2);
+        return $poids_total;
     }
 
     public function carratFixing($fixing_id)
@@ -63,7 +63,7 @@ trait Helper
         $multplication = $this->poidsTimeCarrat($fixing_id);
         $poids_total = $this->poidsFixing($fixing_id);
 
-        $result = ((float) $poids_total) > 0 ? ((float) $multplication / (float) $poids_total) : 0;
+        $result = ( $poids_total) > 0 ? ( $multplication /  $poids_total) : 0;
 
         return number_format($result, 2) ?? 0;
     }
@@ -94,7 +94,7 @@ trait Helper
             }
         }
 
-        return number_format($multplication, 2);
+        return $multplication;
     }
 
     public function barreFondue($id)
@@ -128,10 +128,10 @@ trait Helper
         }
 
         // Normalize all numeric inputs
-        $unit_price  = (float) ($unit_price ?? 0);
-        $densite     = (float) ($barre->densite ?? 0);
-        $poid_pure   = (float) ($barre->poid_pure ?? 0);
-        $carrat_pure = (float) ($barre->carrat_pure ?? 0);
+        $unit_price  =  ($unit_price ?? 0);
+        $densite     =  ($barre->densite ?? 0);
+        $poid_pure   =  ($barre->poid_pure ?? 0);
+        $carrat_pure =  ($barre->carrat_pure ?? 0);
 
         $montant = 0;
 
@@ -139,8 +139,8 @@ trait Helper
             $barre_fondue = Fondation::where('ids_barres', $barre->id)->first();
 
             if ($barre_fondue) {
-                $poids_dubai  = (float) ($barre_fondue->poids_dubai ?? 0);
-                $carrat_dubai = (float) ($barre_fondue->carrat_dubai ?? 0);
+                $poids_dubai  =  ($barre_fondue->poids_dubai ?? 0);
+                $carrat_dubai =  ($barre_fondue->carrat_dubai ?? 0);
 
                 if ($barre_fondue->statut === 'corriger') {
                     $montant = ($densite > 0 ? $unit_price / $densite : 0) * $poids_dubai * $carrat_dubai;
@@ -152,7 +152,7 @@ trait Helper
             $montant = ($densite > 0 ? $unit_price / $densite : 0) * $poid_pure * $carrat_pure;
         }
 
-        return number_format($montant, 2);
+        return $montant;
     }
 
     /**
@@ -167,15 +167,15 @@ trait Helper
 
         // $fixing_barres = FixingBarre::where('fixing_id', $fixing->id)->get();
         $montant_total = 0;
-        $unit_price = (float) ($fixing->unit_price ?? 0);
+        $unit_price =  ($fixing->unit_price ?? 0);
 
         // foreach ($fixing_barres as $barre) {
-        //     $montant_total += (float) $this->montantBarre($barre->barre_id, $unit_price);
+        //     $montant_total +=  $this->montantBarre($barre->barre_id, $unit_price);
         // }
 
-        $montant_total = ($unit_price / 22) * (float) $this->poidsFixing($fixing->id) * (float) $this->carratFixing($fixing->id);
+        $montant_total = ($unit_price / 22) *  $this->poidsFixing($fixing->id) *  $this->carratFixing($fixing->id);
 
-        return number_format($montant_total, 2);
+        return $montant_total;
     }
 
     /**
@@ -194,7 +194,7 @@ trait Helper
         $totals = [];
 
         foreach ($fixings as $fixing) {
-            $montant = (float) $this->montantFixing($fixing->id);
+            $montant =  $this->montantFixing($fixing->id);
 
             $symbole = $fixing->devise->symbole ?? 'N/A';
 
@@ -223,7 +223,7 @@ trait Helper
     {
         $result = ($poid * $carrat) / 24;
 
-        return number_format($result, 2);
+        return $result;
     }
 
     /**
@@ -258,14 +258,14 @@ trait Helper
         // Add operations balances
         foreach ($operations as $op) {
             $symbole = $op['symbole'];
-            $montant = (float) $op['montant'];
+            $montant =  $op['montant'];
             $totals[$symbole] = ($totals[$symbole] ?? 0) + $montant;
         }
 
         // Add fixing balances
         foreach ($fixings as $fix) {
             $symbole = $fix['symbole'];
-            $montant = (float) $fix['montant'];
+            $montant =  $fix['montant'];
             $totals[$symbole] = ($totals[$symbole] ?? 0) + $montant;
         }
 
@@ -274,7 +274,7 @@ trait Helper
         foreach ($totals as $symbole => $montant) {
             $result[] = [
                 'symbole' => $symbole,
-                'montant' => number_format($montant, 2),
+                'montant' => $montant,
             ];
         }
 
