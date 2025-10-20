@@ -3,6 +3,7 @@
 
 namespace App\Traits;
 
+use App\Modules\Comptabilite\Models\FournisseurOperation;
 use App\Modules\Fixing\Models\Fixing;
 use App\Modules\Fixing\Models\FixingBarre;
 use App\Modules\Fondation\Models\Fondation;
@@ -46,12 +47,12 @@ trait Helper
                 if($barre_fondue && $barre_fondue->statut == 'corriger'){
                     $poids_total += $barre_fondue->poids_dubai;
                 }else{
-                    $poids_total += $barre_fondue->poids_fondu;
+                    $poids_total += $barre->poid_pure;
                 }
             }
         }
 
-        return $poids_total;
+        return number_format($poids_total, 2);
     }
 
     public function carratFixing($fixing_id)
@@ -85,12 +86,12 @@ trait Helper
                 if($barre_fondue && $barre_fondue->statut == 'corriger'){
                     $multplication += $barre_fondue->poids_dubai * $barre_fondue->poids_dubai;
                 }else{
-                    $multplication += $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
+                    $multplication += $barre->poid_pure * $barre->carrat_pure;
                 }
             }
         }
 
-        return $multplication;
+        return number_format($multplication, 2);
     }
 
     public function barreFondue($id)
@@ -124,13 +125,13 @@ trait Helper
             if($barre_fondue->statut == 'corriger'){
                 $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_dubai * $barre_fondue->carrat_dubai;
             }else{
-                $montant = ($unit_price / $barre->densite) * $barre_fondue->poids_fondu * $barre_fondue->carrat_fondu;
+                $montant = ($unit_price / $barre->densite) * $barre->poid_pure * $barre->carrat_pure;
             }
         }else{
-            $montant = ($unit_price / $barre->densite) * $barre->poid_pre * $barre->carrat_pure;
+            $montant = ($unit_price / $barre->densite) * $barre->poid_pure * $barre->carrat_pure;
         }
 
-        return $montant;
+        return number_format($montant, 2);
     }
 
     public function montantFixing($fixing_id)
@@ -144,6 +145,56 @@ trait Helper
             $montant_total += $this->montantBarre($barre->barre_id, $fixing->unit_price);
         }
 
-        return $montant_total;
+        return number_format($montant_total, 2);
+    }
+
+    /**
+     * Cette methode retourne la pureter de l'or
+     */
+    public function pureter($poid, $carrat)
+    {
+        $result = ($poid * $carrat) / 24;
+
+        return number_format($result, 2);
+    }
+
+    /**
+     * Cette method est pour retourner le solde d'un compte donner
+     */
+    public function soldeCompte($compte_id, $solde_initial = 0)
+    {
+        $entreeFournisseur = FournisseurOperation::where('compte_id', $compte_id)->whereHas('typeOperation', function ($query) {
+                                $query->where('nature', 1);
+                             })->sum('montant');
+
+        $sortieFournisseur = FournisseurOperation::where('compte_id', $compte_id)->whereHas('typeOperation', function ($query) {
+                                $query->where('nature', 0);
+                             })->sum('montant');
+
+        $solde = ($solde_initial + $entreeFournisseur) - $sortieFournisseur;
+
+        return $solde ?? 0;
+    }
+
+    /**
+     * Cette method est pour retourner le solde d'un fournisseur donner
+     */
+    public function soldeFournisseur($fournisseur_id)
+    {
+        $fixing = Fixing::where('fournisseur_id', $fournisseur_id)->first();
+
+        $entreeFournisseur = FournisseurOperation::where('fournisseur_id', $fournisseur_id)->whereHas('typeOperation', function ($query) {
+                                $query->where('nature', 1);
+                             })->sum('montant');
+
+        $sortieFournisseur = FournisseurOperation::where('fournisseur_id', $fournisseur_id)->whereHas('typeOperation', function ($query) {
+                                $query->where('nature', 0);
+                             })->sum('montant');
+
+        $montantFixing = $this->montantFixing($fixing->id);
+
+        $solde = ($montantFixing + $entreeFournisseur) - $sortieFournisseur;
+
+        return number_format($solde, 2) ?? 0;
     }
 }

@@ -65,6 +65,7 @@ class AchatResource extends JsonResource
                     'poid_pure' => $barre->poid_pure ?? null,
                     'carrat_pure' => $barre->carrat_pure ?? null,
                     'densite' => $barre->densite ?? null,
+                    'pureter' => $this->pureter($barre->poid_pure, $barre->carrat_pure),
                     'barre_status' => $barre->status ?? null,
                     'is_fixed' => $barre->is_fixed,
                 ];

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TypeOperation extends Model
 {
@@ -54,5 +55,10 @@ class TypeOperation extends Model
         return Attribute::make(
             get: fn () => ucfirst($this->nature) . ' - ' . ucfirst($this->libelle)
         );
+    }
+
+    public function fournisseurOperations() : HasMany
+    {
+        return $this->hasMany(FournisseurOperation::class)->whereNull('fournisseur_operations.deleted_at');
     }
 }

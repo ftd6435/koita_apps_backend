@@ -16,14 +16,14 @@ class FournisseurController extends Controller
 
     public function index()
     {
-        $fournisseurs = Fournisseur::with('achats', 'createdBy', 'updatedBy')->orderBy('created_by', 'desc')->get();
+        $fournisseurs = Fournisseur::with('achats', 'operations', 'createdBy', 'updatedBy')->orderBy('created_by', 'desc')->get();
 
         return $this->successResponse(FournisseurResource::collection($fournisseurs), "Liste de tous les fournisseurs.");
     }
 
     public function show(string $id)
     {
-        $fournisseur = Fournisseur::with('achats', 'createdBy', 'updatedBy')->find($id);
+        $fournisseur = Fournisseur::with('achats', 'operations', 'createdBy', 'updatedBy')->find($id);
 
         if(! $fournisseur){
             return $this->errorResponse("Fournisseur introuvable");

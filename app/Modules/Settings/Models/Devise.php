@@ -3,10 +3,12 @@
 namespace App\Modules\Settings\Models;
 
 use App\Modules\Administration\Models\User;
+use App\Modules\Comptabilite\Models\Compte;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Devise extends Model
 {
@@ -54,5 +56,10 @@ class Devise extends Model
         return Attribute::make(
             get: fn () => trim($this->libelle . ($this->symbole ? " ({$this->symbole})" : ''))
         );
+    }
+
+    public function comptes() : HasMany
+    {
+        return $this->hasMany(Compte::class)->whereNull('comptes.deleted_at');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Administration\Models;
 
+use App\Modules\Comptabilite\Models\FournisseurOperation;
 use App\Modules\Purchase\Models\Achat;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,11 @@ class Fournisseur extends Model
     public function achats() : HasMany
     {
         return $this->hasMany(Achat::class)->whereNull('achats.deleted_at');
+    }
+
+    public function operations() : HasMany
+    {
+        return $this->hasMany(FournisseurOperation::class)->whereNull('fournisseur_operations.deleted_at');
     }
 
     public function createdBy(): BelongsTo

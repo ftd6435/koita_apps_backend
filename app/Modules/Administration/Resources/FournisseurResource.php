@@ -2,12 +2,16 @@
 
 namespace App\Modules\Administration\Resources;
 
+use App\Modules\Comptabilite\Resources\FournisseurOperationResource;
 use App\Modules\Purchase\Resources\AchatResource;
+use App\Traits\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class FournisseurResource extends JsonResource
 {
+    use Helper;
+
     public function toArray(Request $request)
     {
         return [
@@ -15,10 +19,12 @@ class FournisseurResource extends JsonResource
             'name' => $this->name,
             'adresse' => $this->adresse,
             'telephone' => $this->telephone ?? null,
+            'solde' => $this->soldeFournisseur($this->id),
             'image' => is_null($this->image) ? asset('/images/male.jpg') : asset('/storage/images/fournisseurs/'.$this->image),
 
             // ✅ Achats relationship
             'achats' => AchatResource::collection($this->whenLoaded('achats')),
+            'operations' => FournisseurOperationResource::collection($this->whenLoaded('operations')),
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,

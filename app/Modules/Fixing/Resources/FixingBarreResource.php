@@ -20,6 +20,7 @@ class FixingBarreResource extends JsonResource
                 'poid_pure' => $this->barre->poid_pure ?? null,
                 'carrat_pure' => $this->barre->carrat_pure ?? null,
                 'densite' => $this->barre->densite ?? null,
+                'pureter' => $this->pureter($this->barre->poid_pure, $this->barre->carrat_pure),
                 'barre_status' => $this->barre->status ?? null,
                 'is_fixed' => $this->barre->is_fixed,
                 'apres_fonde' => $this->barre->status == 'fondue' ? $this->barreFondue($this->barre->id) : null,

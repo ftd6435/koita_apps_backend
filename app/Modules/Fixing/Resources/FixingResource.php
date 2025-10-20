@@ -42,9 +42,9 @@ class FixingResource extends JsonResource
             'poids_provisoir' => $this->poids_pro,
             'carrat_provisoir' => $this->carrat_moyenne,
 
-            'poids_fixing' => number_format($this->poidsFixing($this->id), 3),
-            'carrat_fixing' => number_format($this->carratFixing($this->id), 3),
-            'montant_total' => number_format($this->montantFixing($this->id), 3),
+            'poids_fixing' => $this->poidsFixing($this->id),
+            'carrat_fixing' => $this->carratFixing($this->id),
+            'montant_total' => $this->montantFixing($this->id),
 
             'discount' => $this->discount ?? null,
             'bourse' => $this->bourse ?? null,

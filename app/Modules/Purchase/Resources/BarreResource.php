@@ -2,17 +2,21 @@
 
 namespace App\Modules\Purchase\Resources;
 
+use App\Traits\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class BarreResource extends JsonResource
 {
+    use Helper;
+
     public function toArray(Request $request)
     {
         return [
             'id' => $this->id,
             'poid_pure' => $this->poid_pure,
             'carrat_pure' => $this->carrat_pure,
+            'pureter' => $this->pureter($this->poid_pure, $this->carrat_pure),
             'densite' => $this->densite,
             'status' => $this->status,
             'is_fixed' => $this->is_fixed,
