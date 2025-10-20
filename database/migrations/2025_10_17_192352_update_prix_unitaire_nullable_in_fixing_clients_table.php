@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('fixing_clients', function (Blueprint $table) {
             $table->decimal('prix_unitaire', 10, 5)
-                ->nullable()
                 ->default(0)
                 ->change();
         });
@@ -27,7 +26,6 @@ return new class extends Migration
         Schema::table('fixing_clients', function (Blueprint $table) {
             $table->decimal('prix_unitaire', 10, 5)
                 ->default(0.00)
-                ->nullable(false)
                 ->change();
         });
     }
