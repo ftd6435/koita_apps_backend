@@ -309,7 +309,8 @@ class FixingClientService
     if ($typeClient === 'local') {
         // 🟢 Cas client local
         $prixUnitaire = ($bourse / 34) - $discompte;
-        $totalFacture = $prixUnitaire * $poidsTotal * $carratMoyen;
+
+        $totalFacture =( $prixUnitaire /22)* $poidsTotal * $carratMoyen;
     } else {
         // 🟣 Cas client extra (Dubaï)
         $totalFacture = ($bourse / 31.10347) * $pureteTotale - ($discompte * 32);
