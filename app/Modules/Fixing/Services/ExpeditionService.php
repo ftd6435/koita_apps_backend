@@ -194,8 +194,8 @@ class ExpeditionService
                 $carrat_fondu = (float) $expedition->fondation->carrat_fondu;
 
                 // 💎 Pureté locale = ((poids * carat) / 24) / carrat_moyen
-                $purete_locale_brute = ($poids_fondu * $carrat_fondu) / 24;
-                $purete_local        = $carratMoyen > 0 ? $purete_locale_brute / $carratMoyen : 0.0;
+             $purete_local    = ($poids_fondu * $carrat_fondu) / 24;
+               
 
                 $details[] = [
                     'id_expedition' => $expedition->id,
