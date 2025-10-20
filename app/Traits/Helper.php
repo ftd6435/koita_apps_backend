@@ -155,12 +155,16 @@ trait Helper
     public function montantFixing($fixing_id)
     {
         $fixing = Fixing::find($fixing_id);
+        if (!$fixing) {
+            return 0;
+        }
+
         $fixing_barres = FixingBarre::where('fixing_id', $fixing->id)->get();
-
         $montant_total = 0;
+        $unit_price = (float) ($fixing->unit_price ?? 0);
 
-        foreach($fixing_barres as $barre){
-            $montant_total += $this->montantBarre($barre->barre_id, $fixing->unit_price);
+        foreach ($fixing_barres as $barre) {
+            $montant_total += (float) $this->montantBarre($barre->barre_id, $unit_price);
         }
 
         return number_format($montant_total, 2);
