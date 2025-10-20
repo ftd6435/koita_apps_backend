@@ -12,6 +12,9 @@ class FixingBarreResource extends JsonResource
 
     public function toArray(Request $request)
     {
+        $pureter = $this->pureter($this->barre->poid_pure, $this->barre->carrat_pure);
+        $montant_barre = $this->montantBarre($this->barre->id, $this->fixing->unit_price);
+
         return [
             'id' => $this->id,
 
@@ -20,11 +23,11 @@ class FixingBarreResource extends JsonResource
                 'poid_pure' => $this->barre->poid_pure ?? null,
                 'carrat_pure' => $this->barre->carrat_pure ?? null,
                 'densite' => $this->barre->densite ?? null,
-                'pureter' => $this->pureter($this->barre->poid_pure, $this->barre->carrat_pure),
+                'pureter' => number_format($pureter, 3),
                 'barre_status' => $this->barre->status ?? null,
                 'is_fixed' => $this->barre->is_fixed,
                 'apres_fonde' => $this->barre->status == 'fondue' ? $this->barreFondue($this->barre->id) : null,
-                'montant_barre' => $this->montantBarre($this->barre->id, $this->fixing->unit_price)
+                'montant_barre' => number_format($montant_barre, 3)
             ],
 
             'fixing' => [
