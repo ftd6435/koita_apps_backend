@@ -4,6 +4,7 @@ namespace App\Modules\Purchase\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Fixing\Models\Fixing;
+use App\Modules\Fixing\Models\FixingBarre;
 use App\Modules\Purchase\Models\Achat;
 use App\Modules\Purchase\Models\Barre;
 use App\Modules\Purchase\Models\Lot;
@@ -68,7 +69,9 @@ class BarreController extends Controller
                 $achat = Achat::find($data['barres'][0]['achat_id']);
 
                 if ($achat) {
-                    Fixing::create([
+                    $achat->update(['status' => 'terminer']);
+                    
+                    $newFixing = Fixing::create([
                         'fournisseur_id' => $achat->fournisseur_id,
                         'bourse' => $fixing['bourse'] ?? null,
                         'discount' => $fixing['discount'] ?? null,
@@ -115,8 +118,16 @@ class BarreController extends Controller
             }
 
             // Bulk insert new barres
-            if (!empty($insertData)) {
-                Barre::insert($insertData);
+            foreach ($insertData as $item) {
+                $barre = Barre::create($item);
+
+                // Filling the pivot table
+                FixingBarre::create([
+                    'fixing_id' => $newFixing->id,
+                    'barre_id' => $barre->id,
+                    'created_by' => Auth::id(),
+                    'created_at' => $now,
+                ]);
             }
 
             DB::commit();
