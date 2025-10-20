@@ -3,16 +3,19 @@
 namespace App\Modules\Purchase\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Fixing\Models\Fixing;
 use App\Modules\Purchase\Models\Achat;
 use App\Modules\Purchase\Models\Barre;
 use App\Modules\Purchase\Models\Lot;
 use App\Modules\Purchase\Requests\StoreBarreRequest;
 use App\Modules\Purchase\Resources\BarreResource;
+use App\Modules\Settings\Models\Devise;
 use App\Traits\ApiResponses;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Throwable;
 
 class BarreController extends Controller
@@ -42,14 +45,48 @@ class BarreController extends Controller
         DB::beginTransaction();
 
         try {
-            $barres = collect($request->validated());
+            $data = $request->validated();
+
+            // Make fixing optional
+            $fixing = $data['fixing'] ?? null;
+
+            if (!empty($fixing) && is_array($fixing)) {
+                // Safely check devise if provided
+                $devise = !empty($fixing['devise_id'])
+                    ? Devise::find($fixing['devise_id'])
+                    : null;
+
+                if ($devise && Str::upper($devise->symbole) === 'USD') {
+                    $bourse = $fixing['bourse'] ?? 0;
+                    $discount = $fixing['discount'] ?? 0;
+
+                    // calculate unit_price if missing or zero
+                    $fixing['unit_price'] = $fixing['unit_price'] ?? (($bourse / 34) - $discount);
+                }
+
+                // Ensure we have a valid achat before creating Fixing
+                $achat = Achat::find($data['barres'][0]['achat_id']);
+
+                if ($achat) {
+                    Fixing::create([
+                        'fournisseur_id' => $achat->fournisseur_id,
+                        'bourse' => $fixing['bourse'] ?? null,
+                        'discount' => $fixing['discount'] ?? null,
+                        'unit_price' => $fixing['unit_price'] ?? null,
+                        'devise_id' => $fixing['devise_id'] ?? null,
+                        'status' => "confirmer",
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            }
+
             $now = Carbon::now();
 
             $insertData = [];
             $updateCount = 0;
             $insertCount = 0;
 
-            foreach ($barres as $item) {
+            foreach ($data['barres'] as $item) {
                 // If ID exists → update existing barre
                 if (!empty($item['id'])) {
                     Barre::where('id', $item['id'])->update([
