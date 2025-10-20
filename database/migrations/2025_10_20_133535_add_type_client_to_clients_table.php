@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            //
+            // 🔹 Ajout du champ type_client avec valeurs possibles : local ou extra
+            $table->enum('type_client', ['local', 'extrat'])
+                  ->default('local')
+                  ->after('nom_complet');
         });
     }
 
@@ -22,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            //
+            $table->dropColumn('type_client');
         });
     }
 };
