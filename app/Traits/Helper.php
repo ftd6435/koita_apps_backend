@@ -117,24 +117,40 @@ trait Helper
 
     public function montantBarre($id, $unit_price)
     {
+        // Retrieve barre safely
         $barre = Barre::find($id);
+        if (!$barre) {
+            return 0; // or throw exception if needed
+        }
+
+        // Normalize all numeric inputs
+        $unit_price  = (float) ($unit_price ?? 0);
+        $densite     = (float) ($barre->densite ?? 0);
+        $poid_pure   = (float) ($barre->poid_pure ?? 0);
+        $carrat_pure = (float) ($barre->carrat_pure ?? 0);
 
         $montant = 0;
 
-        if($barre->status == "fondue"){
+        if ($barre->status === "fondue") {
             $barre_fondue = Fondation::where('ids_barres', $barre->id)->first();
 
-            if($barre_fondue->statut == 'corriger'){
-                $montant = ($barre->densite > 0 ? $unit_price / $barre->densite : 0) * $barre_fondue->poids_dubai * $barre_fondue->carrat_dubai;
-            }else{
-                $montant = ($barre->densite > 0 ? $unit_price / $barre->densite : 0) * $barre->poid_pure * $barre->carrat_pure;
+            if ($barre_fondue) {
+                $poids_dubai  = (float) ($barre_fondue->poids_dubai ?? 0);
+                $carrat_dubai = (float) ($barre_fondue->carrat_dubai ?? 0);
+
+                if ($barre_fondue->statut === 'corriger') {
+                    $montant = ($densite > 0 ? $unit_price / $densite : 0) * $poids_dubai * $carrat_dubai;
+                } else {
+                    $montant = ($densite > 0 ? $unit_price / $densite : 0) * $poid_pure * $carrat_pure;
+                }
             }
-        }else{
-            $montant = ($barre->densite > 0 ? $unit_price / $barre->densite : 0) * $barre->poid_pure * $barre->carrat_pure;
+        } else {
+            $montant = ($densite > 0 ? $unit_price / $densite : 0) * $poid_pure * $carrat_pure;
         }
 
         return number_format($montant, 2);
     }
+
 
     public function montantFixing($fixing_id)
     {
