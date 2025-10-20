@@ -241,6 +241,84 @@ class FixingClientService
             'total_facture' => $this->truncate($totalFacture, 2),
         ];
     }
+    // public function calculerFacture(int $id_fixing): array
+    // {
+    //     $fixing = FixingClient::find($id_fixing);
+
+    //     if (! $fixing) {
+    //         return [
+    //             'status'  => 404,
+    //             'message' => "Fixing introuvable avec l’ID {$id_fixing}.",
+    //         ];
+    //     }
+
+    //     // Constantes
+    //     $densite   = 22;
+    //     $bourse    = (float) $fixing->bourse;
+    //     $discompte = (float) $fixing->discompte;
+
+    //     // Calcul du prix unitaire
+    //     $prixUnitaire = ($bourse / 34) - $discompte;
+
+    //     // Récupération des fondations liées à ce fixing
+    //     $fondations = Fondation::where('id_fixing', $fixing->id)->get();
+
+    //     // Variables de cumul
+    //     $details            = [];
+    //     $totalFacture       = 0;
+    //     $poidsTotal         = 0;
+    //     $sommeCaratPonderee = 0;
+    //     $pureteTotale       = 0;
+
+    //     // Parcours de chaque fondation
+    //     foreach ($fondations as $fondation) {
+    //         $poids = (float) $fondation->poids_fondu;
+    //         $carat = (float) $fondation->carrat_fondu;
+
+    //         // 💎 Calcul de la pureté (poids d’or pur)
+    //         $purete = ($poids * $carat) / 24;
+
+    //         // 💰 Calcul du montant de la fondation
+    //         $montant = ($prixUnitaire / $densite) * $poids * $carat;
+
+    //         // 🔹 Troncature à 2 décimales sans arrondir
+    //         $prixUnitaireTronque = $this->truncate($prixUnitaire, 2);
+    //         $montantTronque      = $this->truncate($montant, 2);
+    //         $pureteTronque       = $this->truncate($purete, 2);
+
+    //         // Détails de chaque ligne
+    //         $details[] = [
+    //             'id_fondation'  => $fondation->id,
+    //             'reference'     => $fondation->initFondation?->reference ?? null,
+    //             'poids_fondu'   => $poids,
+    //             'carrat_fondu'  => $carat,
+    //             'purete'        => $pureteTronque,
+    //             'prix_unitaire' => $prixUnitaireTronque,
+    //             'montant'       => $montantTronque,
+    //         ];
+
+    //         // Cumuls globaux
+    //         $totalFacture += $montantTronque;
+    //         $poidsTotal += $poids;
+    //         $sommeCaratPonderee += $poids * $carat;
+    //         $pureteTotale += $purete;
+    //     }
+
+    //     // Calcul du carat moyen pondéré
+    //     $carratMoyen = $poidsTotal > 0 ? $sommeCaratPonderee / $poidsTotal : 0;
+
+    //     // Résultat final
+    //     return [
+    //         'status'        => 200,
+    //         'id_fixing'     => $fixing->id,
+    //         'prix_unitaire' => $this->truncate($prixUnitaire, 2),
+    //         'poids_total'   => $this->truncate($poidsTotal, 2),
+    //         'carrat_moyen'  => $this->truncate($carratMoyen, 2),
+    //         'purete_totale' => $this->truncate($pureteTotale, 2),
+    //         'fondations'    => $details,
+    //         'total_facture' => $this->truncate($totalFacture, 2),
+    //     ];
+    // }
 
     /**
      * 🔹 Tronque un nombre à X décimales sans arrondir.

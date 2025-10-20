@@ -4,9 +4,12 @@ namespace App\Modules\Fondation\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Traits\Helper;
 
 class FondationResource1 extends JsonResource
 {
+
+    use Helper;
     /**
      * Transforme la ressource en tableau JSON.
      */
@@ -19,6 +22,8 @@ class FondationResource1 extends JsonResource
             'carrat_fondu'  => (float) $this->carrat_fondu,
             'poids_dubai'   => (float) $this->poids_dubai,
             'carrat_dubai'  => (float) $this->carrat_dubai,
+            'purete_locale'   => $this->pureter($this->poids_fondu, $this->carrat_fondu),
+            'purete_dubai'    => $this->pureter($this->poids_dubai, $this->carrat_dubai),
             'is_fixed'      => (bool) $this->is_fixed,
             'statut'        => $this->statut,
 

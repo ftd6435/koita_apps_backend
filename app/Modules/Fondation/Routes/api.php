@@ -2,8 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Fondation\Controllers\FondationController;
+use App\Modules\Fondation\Controllers\FondationDubaiController;
 use App\Modules\Fondation\Controllers\InitFondationController;
-use App\Modules\Fondation\Models\InitFondation;
+
 
 Route::middleware('auth:sanctum')->prefix('v1/fondations')->group(function () {
     Route::apiResource('operations', FondationController::class)->only([
@@ -18,4 +19,5 @@ Route::middleware('auth:sanctum')->prefix('v1/fondations')->group(function () {
         'show',
         'destroy',
     ]);
+     Route::put('dubai/corrections', [FondationDubaiController::class, 'updateCorrections']);
 });

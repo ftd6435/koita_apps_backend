@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('carrat_moyen', 10, 5)->default(0.00);
             $table->decimal('discompte', 10, 5)->default(0.00);
             $table->decimal('bourse', 10, 5)->default(0.00);
-            $table->decimal('prix_unitaire', 10, 5)->default(0.00);
+            $table->decimal('prix_unitaire', 10, 5)->nullable();
 
             // 🔹 Devise associée
             $table->foreignId('id_devise')
