@@ -93,7 +93,7 @@ class BarreController extends Controller
                         'achat_id'   => $item['achat_id'],
                         'poid_pure'  => $item['poid_pure'],
                         'carrat_pure'=> $item['carrat_pure'],
-                        'densite'    => $item['densite'] ?? null,
+                        'densite'    => $item['densite'] ?? 22,
                         'updated_by' => Auth::id(),
                         'updated_at' => $now,
                     ]);
@@ -105,7 +105,7 @@ class BarreController extends Controller
                         'achat_id'   => $item['achat_id'],
                         'poid_pure'  => $item['poid_pure'],
                         'carrat_pure'=> $item['carrat_pure'],
-                        'densite'    => $item['densite'] ?? null,
+                        'densite'    => $item['densite'] ?? 22,
                         'created_by' => Auth::id(),
                         'created_at' => $now,
                         'updated_at' => $now,
