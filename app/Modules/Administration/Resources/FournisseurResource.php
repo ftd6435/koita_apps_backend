@@ -25,6 +25,7 @@ class FournisseurResource extends JsonResource
             // ✅ Achats relationship
             'achats' => AchatResource::collection($this->whenLoaded('achats')),
             'operations' => FournisseurOperationResource::collection($this->whenLoaded('operations')),
+            'historiques' => $this->historiqueFournisseurComplet($this->id),
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,
