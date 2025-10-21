@@ -5,6 +5,7 @@ namespace App\Modules\Settings\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Modules\Fixing\Resources\FixingClientResource;
 use App\Modules\Fixing\Resources\InitLivraisonResource;
+use App\Modules\Settings\Services\ClientService;
 
 class ClientResource extends JsonResource
 {
@@ -13,6 +14,9 @@ class ClientResource extends JsonResource
      */
     public function toArray($request): array
     {
+        // 🔹 Calcul du solde actuel du client par devise
+        $solde = app(ClientService::class)->calculerSoldeClient($this->id);
+
         return array_filter([
             'id'             => $this->id,
             'nom_complet'    => $this->nom_complet,
@@ -23,6 +27,10 @@ class ClientResource extends JsonResource
             'adresse'        => $this->adresse,
             'telephone'      => $this->telephone,
             'email'          => $this->email,
+
+            // 💰 Soldes par devise
+            'solde_usd'      => $solde['solde_usd'] ?? 0,
+            'solde_gnf'      => $solde['solde_gnf'] ?? 0,
 
             // 🔹 Informations d’audit
             'created_by'     => $this->createur?->name,
