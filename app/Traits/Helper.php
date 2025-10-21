@@ -288,84 +288,92 @@ trait Helper
      */
     public function historiqueFournisseurComplet($fournisseurId)
     {
-        // 🔹 Load fournisseur with fixings, operations, and devises
+        // ✅ Load fournisseur safely
         $fournisseur = Fournisseur::with([
-            'operations.typeOperation',
-            'operations.devise',
+            'fournisseurOperations.typeOperation',
+            'fournisseurOperations.devise',
             'fixings.devise',
             'fixings.fixingBarres'
         ])->find($fournisseurId);
 
-        // 🔹 1. Transform FournisseurOperations
+        // ✅ If supplier not found → return empty
+        if (!$fournisseur) {
+            return collect([]);
+        }
+
+        // ✅ 1. Transform operations (if any)
         $operations = $fournisseur->fournisseurOperations?->map(function ($op) {
-            $nature = $op->typeOperation->nature;
-            $montant = $op->montant;
+            $nature = $op->typeOperation?->nature ?? 0;
+            $montant = (float) ($op->montant ?? 0);
 
             return [
                 'date' => $op->created_at,
-                'mouvement' => $op->commentaire,
+                'mouvement' => $op->commentaire ?? '',
                 'credit' => $nature == 1 ? $montant : 0,
                 'debit' => $nature == 0 ? $montant : 0,
-                'symbole' => $op->devise->symbole,
+                'symbole' => $op->devise?->symbole ?? 'N/A',
             ];
-        });
+        }) ?? collect([]);
 
-        // 🔹 2. Transform Fixings
+        // ✅ 2. Transform fixings (if any)
         $fixings = $fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
             $devise = $fixing->devise;
-            $hasBarres = $fixing->fixingBarres->count() > 0;
+            $symbole = $devise?->symbole ?? 'N/A';
+            $hasBarres = $fixing->fixingBarres?->count() > 0;
 
             // Compute unit_price if USD
-            $unit_price = $fixing->unit_price;
-            if (Str::upper($devise->symbole) === 'USD') {
-                $unit_price = ($fixing->bourse / 34) - $fixing->discount;
+            $unit_price = (float) ($fixing->unit_price ?? 0);
+            if (Str::upper($symbole) === 'USD') {
+                $unit_price = ((float) ($fixing->bourse ?? 0) / 34) - (float) ($fixing->discount ?? 0);
             }
 
             // Compute montant
             if ($hasBarres) {
-                $montant = $this->montantFixing($fixing->id);
-
+                $montant = (float) $this->montantFixing($fixing->id);
                 $commentaire = "Fixing de {$fournisseur->name}";
             } else {
-                $montant = ($unit_price / 22) * $fixing->poids_pro * $fixing->carrat_moyenne;
-
+                $montant = ($unit_price / 22) * (float) ($fixing->poids_pro ?? 0) * (float) ($fixing->carrat_moyenne ?? 0);
                 $commentaire = "Fixing provisoire par {$fournisseur->name}";
             }
 
             return [
                 'date' => $fixing->created_at,
                 'mouvement' => $commentaire,
-                'credit' => $montant,
+                'credit' => round($montant, 2),
                 'debit' => 0,
-                'symbole' => $devise->symbole,
+                'symbole' => $symbole,
             ];
-        });
+        }) ?? collect([]);
 
-        // 🔹 3. Merge both collections
-        $allTransactions = $operations?->merge($fixings);
+        // ✅ 3. Merge both collections (even if one is empty)
+        $allTransactions = $operations->merge($fixings);
 
-        // 🔹 4. Group by devise and sort by date
+        // ✅ If no transactions at all → return empty
+        if ($allTransactions->isEmpty()) {
+            return collect([]);
+        }
+
+        // ✅ 4. Group by devise and compute running solde
         $historiques = $allTransactions
-            ?->sortBy('date')
-            ?->groupBy('symbole')
-            ?->map(function ($transactions) {
+            ->sortBy('date')
+            ->groupBy('symbole')
+            ->map(function ($transactions) {
                 $solde = 0;
 
-                return $transactions?->map(function ($t) use (&$solde) {
+                return $transactions->map(function ($t) use (&$solde) {
                     $solde += $t['credit'];
                     $solde -= $t['debit'];
 
                     return [
-                        'date' => $t['date']->format('d-m-Y H:i:s'),
+                        'date' => optional($t['date'])->format('d-m-Y H:i:s') ?? '',
                         'mouvement' => $t['mouvement'],
                         'credit' => $t['credit'],
                         'debit' => $t['debit'],
-                        'solde' => $solde,
+                        'solde' => round($solde, 2),
                     ];
                 });
             });
 
         return $historiques;
     }
-
 }
