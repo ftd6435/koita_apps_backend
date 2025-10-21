@@ -346,8 +346,8 @@ trait Helper
 
         // 🔹 4. Group by devise and sort by date
         $historiques = $allTransactions
-            ->sortBy('date')
-            ->groupBy('symbole')
+            ?->sortBy('date')
+            ?->groupBy('symbole')
             ?->map(function ($transactions) {
                 $solde = 0;
 
@@ -356,7 +356,7 @@ trait Helper
                     $solde -= $t['debit'];
 
                     return [
-                        'date' => $t['date']->format('Y-m-d H:i:s'),
+                        'date' => $t['date']->format('d-m-Y H:i:s'),
                         'mouvement' => $t['mouvement'],
                         'credit' => $t['credit'],
                         'debit' => $t['debit'],
