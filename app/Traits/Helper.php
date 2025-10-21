@@ -342,7 +342,7 @@ trait Helper
         });
 
         // 🔹 3. Merge both collections
-        $allTransactions = $operations->merge($fixings);
+        $allTransactions = $operations?->merge($fixings);
 
         // 🔹 4. Group by devise and sort by date
         $historiques = $allTransactions
