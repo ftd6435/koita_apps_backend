@@ -290,8 +290,8 @@ trait Helper
     {
         // ✅ Load fournisseur safely
         $fournisseur = Fournisseur::with([
-            'fournisseurOperations.typeOperation',
-            'fournisseurOperations.devise',
+            'operations.typeOperation',
+            'operations.devise',
             'fixings.devise',
             'fixings.fixingBarres'
         ])->find($fournisseurId);
