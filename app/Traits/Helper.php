@@ -297,7 +297,7 @@ trait Helper
         ])->find($fournisseurId);
 
         // 🔹 1. Transform FournisseurOperations
-        $operations = $fournisseur->fournisseurOperations->map(function ($op) {
+        $operations = $fournisseur->fournisseurOperations?->map(function ($op) {
             $nature = $op->typeOperation->nature;
             $montant = $op->montant;
 
@@ -311,7 +311,7 @@ trait Helper
         });
 
         // 🔹 2. Transform Fixings
-        $fixings = $fournisseur->fixings->map(function ($fixing) use ($fournisseur) {
+        $fixings = $fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
             $devise = $fixing->devise;
             $hasBarres = $fixing->fixingBarres->count() > 0;
 
@@ -348,10 +348,10 @@ trait Helper
         $historiques = $allTransactions
             ->sortBy('date')
             ->groupBy('symbole')
-            ->map(function ($transactions) {
+            ?->map(function ($transactions) {
                 $solde = 0;
 
-                return $transactions->map(function ($t) use (&$solde) {
+                return $transactions?->map(function ($t) use (&$solde) {
                     $solde += $t['credit'];
                     $solde -= $t['debit'];
 
