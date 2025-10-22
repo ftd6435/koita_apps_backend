@@ -22,6 +22,8 @@ class OperationDivers extends Model
         'id_devise',
         'montant',
         'commentaire',
+        'reference',
+        'date_operation',
         'created_by',
         'updated_by',
     ];

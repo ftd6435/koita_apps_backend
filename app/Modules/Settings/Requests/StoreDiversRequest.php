@@ -22,10 +22,15 @@ class StoreDiversRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => 'required|string|max:100',
-            'telephone'  => 'nullable|string|max:30',
-            'adresse'    => 'nullable|string|max:100',
-            'type'       => 'nullable|string|max:100|in:partenaire,client,fournisseur,autre',
+            'name'            => 'required|string|max:100',
+            'raison_sociale'  => 'nullable|string|max:150',
+            'telephone'       => 'nullable|string|max:30',
+            'adresse'         => 'nullable|string|max:100',
+            'type'            => 'nullable|string|max:100',
+
+            // 🆕 Champs ajoutés
+            'reference'       => 'nullable|string|max:100',
+            'date_operation'  => 'nullable|date',
         ];
     }
 
@@ -35,12 +40,16 @@ class StoreDiversRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'      => 'Le nom est obligatoire.',
-            'name.string'        => 'Le nom doit être une chaîne de caractères.',
-            'name.max'           => 'Le nom ne peut pas dépasser 100 caractères.',
-            'telephone.max'      => 'Le numéro de téléphone ne peut pas dépasser 30 caractères.',
-            'adresse.max'        => 'L’adresse ne peut pas dépasser 100 caractères.',
-            'type.in'            => 'Le type doit être parmi : partenaire, client, fournisseur ou autre.',
+            'name.required'          => 'Le nom est obligatoire.',
+            'name.string'            => 'Le nom doit être une chaîne de caractères.',
+            'name.max'               => 'Le nom ne peut pas dépasser 100 caractères.',
+            'raison_sociale.string'  => 'La raison sociale doit être une chaîne de caractères.',
+            'raison_sociale.max'     => 'La raison sociale ne peut pas dépasser 150 caractères.',
+            'telephone.max'          => 'Le numéro de téléphone ne peut pas dépasser 30 caractères.',
+            'adresse.max'            => 'L’adresse ne peut pas dépasser 100 caractères.',
+            'type.in'                => 'Le type doit être parmi : partenaire, client, fournisseur ou autre.',
+            'reference.max'          => 'La référence ne peut pas dépasser 100 caractères.',
+            'date_operation.date'    => 'La date d’opération doit être une date valide.',
         ];
     }
 
