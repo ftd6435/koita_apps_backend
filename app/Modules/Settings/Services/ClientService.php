@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Modules\Settings\Services;
 
 use App\Modules\Comptabilite\Models\OperationClient;
@@ -9,9 +8,9 @@ use App\Modules\Fixing\Services\FixingClientService;
 use App\Modules\Settings\Models\Client;
 use App\Modules\Settings\Resources\ClientResource;
 use App\Modules\Settings\Resources\LivraisonNonFixeeResource;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Collection;
 use Exception;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class ClientService
 {
@@ -22,7 +21,7 @@ class ClientService
     {
         try {
             $data['created_by'] = Auth::id();
-            $client = Client::create($data)->refresh();
+            $client             = Client::create($data)->refresh();
 
             return response()->json([
                 'status'  => 200,
@@ -46,7 +45,7 @@ class ClientService
     public function update(int $id, array $data)
     {
         try {
-            $client = Client::findOrFail($id);
+            $client            = Client::findOrFail($id);
             $data['modify_by'] = Auth::id();
             $client->update($data);
 
@@ -181,7 +180,7 @@ class ClientService
         $sortiesGNF = 0;
 
         foreach ($fixings as $fixing) {
-            $calcul = app(FixingClientService::class)->calculerFacture($fixing->id);
+            $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
             $montant = $calcul['total_facture'] ?? 0;
 
             if ($fixing->devise?->symbole === 'USD') {
@@ -202,41 +201,48 @@ class ClientService
      */
     public function getReleveClient(int $id_client): array
     {
-        // ✅ Récupération des opérations
+        // ✅ Récupération des opérations client
         $operations = OperationClient::with(['typeOperation', 'devise'])
             ->where('id_client', $id_client)
             ->get()
             ->map(function ($op) {
-                $nature = $op->typeOperation?->nature; // 1 = entrée, 2 = sortie
+                $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
 
                 return collect([
-                    'date'    => $op->created_at?->format('Y-m-d H:i:s'),
-                    'type'    => 'operation_client',
-                    'libelle' => $op->typeOperation?->libelle ?? 'Opération client',
-                    'devise'  => $op->devise?->symbole ?? '',
-                    'debit'   => $nature == 2 ? (float) $op->montant : 0,
-                    'credit'  => $nature == 1 ? (float) $op->montant : 0,
+                    'date'           => $op->created_at?->format('Y-m-d H:i:s'),
+                    'date_operation' => $op->date_operation,
+                    'reference'      => $op->reference,
+                    'type'           => 'operation_client',
+                    'libelle'        => $op->typeOperation?->libelle ?? 'Opération client',
+                    'devise'         => $op->devise?->symbole ?? '',
+                    'debit'          => $nature == 0 ? (float) $op->montant : 0, // sortie
+                    'credit'         => $nature == 1 ? (float) $op->montant : 0, // entrée
                 ]);
             });
 
-        // ✅ Récupération des fixings
-        $fixings = FixingClient::with('devise')
+        // ✅ Récupération des fixings (sorties)
+        $fixings = FixingClient::with(['devise'])
             ->where('id_client', $id_client)
             ->get()
             ->map(function ($fix) {
                 $calcul = app(FixingClientService::class)->calculerFacture($fix->id);
 
+                $poidsTotal   = $calcul['purete_totale'] ?? 0;
+                $montantTotal = $calcul['total_facture'] ?? 0;
+
                 return collect([
-                    'date'    => $fix->created_at?->format('Y-m-d H:i:s'),
-                    'type'    => 'fixing',
-                    'libelle' => 'Fixing #' . $fix->id,
-                    'devise'  => $fix->devise?->symbole ?? '',
-                    'debit'   => (float) ($calcul['total_facture'] ?? 0),
-                    'credit'  => 0,
+                    'date'           => $fix->created_at?->format('Y-m-d H:i:s'),
+                    'date_operation' => null,
+                    'reference'      => $fix->reference ?? null,
+                    'type'           => 'fixing',
+                    'libelle'        => "Facturation du {$poidsTotal} g",
+                    'devise' => $fix->devise?->symbole ?? '',
+                    'debit'  => (float) $montantTotal,
+                    'credit' => 0,
                 ]);
             });
 
-        // ✅ Fusion sans erreur
+        // ✅ Fusion complète et triée
         $operationsComplet = $operations
             ->concat($fixings)
             ->sortBy('date')
@@ -264,4 +270,5 @@ class ClientService
 
         return $operationsComplet->toArray();
     }
+
 }
