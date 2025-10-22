@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Comptabilite\Controllers\CaisseController;
 use App\Modules\Comptabilite\Controllers\CompteController;
 use App\Modules\Comptabilite\Controllers\FournisseurOperationController;
 use App\Modules\Comptabilite\Controllers\OperationClientController;
@@ -8,7 +9,7 @@ use App\Modules\Comptabilite\Controllers\TypeOperationController;
 
 Route::middleware('auth:sanctum')->prefix('v1/comptabilite')->group(function () {
     Route::apiResource('type-operations', TypeOperationController::class);
-     Route::apiResource('caisse', TypeOperationController::class);
+     Route::apiResource('caisse', CaisseController::class);
     Route::apiResource('operations-clients', OperationClientController::class);
     Route::apiResource('operations-divers', OperationClientController::class);
 
