@@ -12,12 +12,15 @@ class OperationClientResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // 🕒 Si la date d’opération est nulle, on prend la date de création
+        $dateOperation = $this->date_operation
+            ? date('Y-m-d', strtotime($this->date_operation))
+            : ($this->created_at?->format('Y-m-d'));
+
         return array_filter([
             'id'               => $this->id,
             'reference'        => $this->reference,
-            'date_operation'   => $this->date_operation
-                ? date('Y-m-d', strtotime($this->date_operation))
-                : null,
+            'date_operation'   => $dateOperation,
             'montant'          => (float) $this->montant,
             'commentaire'      => $this->commentaire,
 
