@@ -47,7 +47,7 @@ class FixingClientResource extends JsonResource
                 'prix_unitaire'  => $calculs['prix_unitaire'] ?? null,
                 'poids_total'    => $calculs['poids_total'] ?? 0,
                 'carrat_moyen'   => $calculs['carrat_moyen'] ?? 0,
-                'montant_barre'   => $calculs['montant_barre'] ?? 0,
+               
                 'purete_totale'  => $calculs['purete_totale'] ?? 0,
                 'total_facture'  => $calculs['total_facture'] ?? 0,
                 'details'        => $calculs['fondations'] ?? [],
