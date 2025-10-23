@@ -28,8 +28,8 @@ class FondationDubaiService
                     ]);
 
                     // 🔹 Mise à jour du statut de la livraison liée
-                    if ($fondation->initFondation) {
-                        $initLivraison = $fondation->initFondation;
+                    if ($fondation->expedition->initLivraison) {
+                        $initLivraison = $fondation->expedition->initLivraison;
                         $initLivraison->update(['statut' => 'terminer']);
                     }
 
