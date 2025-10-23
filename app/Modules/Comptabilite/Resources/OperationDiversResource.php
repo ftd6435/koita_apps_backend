@@ -14,14 +14,14 @@ class OperationDiversResource extends JsonResource
     public function toArray(Request $request): array
     {
         // ✅ Formatage sûr de la date
-        $dateOperation = $this->date_operation
-            ? Carbon::parse($this->date_operation)->format('Y-m-d H:i:s')
-            : ($this->created_at?->format('Y-m-d H:i:s'));
+        // $dateOperation = $this->date_operation
+        //     ? Carbon::parse($this->date_operation)->format('Y-m-d H:i:s')
+        //     : ($this->created_at?->format('Y-m-d H:i:s'));
 
         return array_filter([
             'id'               => $this->id,
             'reference'        => $this->reference ?? null,
-            'date_operation'   => $dateOperation,
+           // 'date_operation'   => $dateOperation,
             'montant'          => (float) $this->montant,
             'commentaire'      => $this->commentaire,
 
