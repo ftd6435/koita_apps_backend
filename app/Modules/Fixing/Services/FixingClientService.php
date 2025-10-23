@@ -320,7 +320,7 @@ class FixingClientService
 
     // === Étape 4 : Arrondis et préparation du retour ===
     $prixUnitaireTronque = $prixUnitaire ? $this->truncate($prixUnitaire, 2) : null;
-    $totalFactureTronque = $this->truncate($totalFacture, 2);
+    $totalFactureTronque = round($totalFacture, 2);
 
     return [
         'id_fixing'       => $fixing->id,
