@@ -28,8 +28,8 @@ class FournisseurOperationResource extends JsonResource
                 'taux_change' => $this->devise->taux_change ?? null,
             ],
 
-            'date_operation' => $this->date_operation,
-            'reference' => $this->reference,
+            'date_operation' => $this->date_operation ?? null,
+            'reference' => $this->reference ?? null,
             'taux_jour' => $this->taux,
             'montant' => $this->montant,
             'commentaire' => $this->commentaire ?? null,
