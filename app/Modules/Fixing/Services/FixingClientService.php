@@ -302,7 +302,7 @@ class FixingClientService
     $carratMoyen = round($carratMoyen, 2);
 
     // Pureté totale
-    $pureteTotale = ($poidsTotal * $carratMoyen) / 24;
+    // $pureteTotale = ($poidsTotal * $carratMoyen) / 24;
     $pureteTotale = round($pureteTotale, 3);
 
     // === Étape 3 : Application des formules selon le type de client ===
@@ -326,7 +326,7 @@ class FixingClientService
         'id_fixing'       => $fixing->id,
         'type_client'     => $typeClient,
         'prix_unitaire'   => $prixUnitaireTronque,
-        'poids_total'     => round($poidsTotal, 3),
+        'poids_total'     => round($poidsTotal, 2),
         'carrat_moyen'    => $carratMoyen,
         'purete_totale'   => $pureteTotale,
         'fondations'      => $details,
