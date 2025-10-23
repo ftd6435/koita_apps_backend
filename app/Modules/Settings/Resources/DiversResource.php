@@ -1,7 +1,6 @@
 <?php
 namespace App\Modules\Settings\Resources;
 
-use App\Modules\Comptabilite\Resources\OperationDiversResource;
 use App\Modules\Settings\Services\DiversService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -12,7 +11,7 @@ class DiversResource extends JsonResource
     {
         $diversService = app(DiversService::class);
         $solde         = $diversService->calculerSoldeDivers($this->id);
-        $releve = $diversService->getReleveDivers($this->id);
+        $releve        = $diversService->getReleveDivers($this->id);
 
         return array_filter([
             'id'             => $this->id,
@@ -24,9 +23,7 @@ class DiversResource extends JsonResource
             'solde_usd'      => $solde['usd'] ?? 0,
             'solde_gnf'      => $solde['gnf'] ?? 0,
 
-            'operations'     => OperationDiversResource::collection(
-                $this->whenLoaded('operationsDivers')
-            ),
+            'releve'         => $releve,
 
             'created_by'     => $this->createur?->name,
             'updated_by'     => $this->modificateur?->name,
