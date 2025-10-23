@@ -11,11 +11,11 @@ class FournisseurOperationResource extends JsonResource
     public function toArray(Request $request)
     {
         return [
-            'id'                => $this->id,
+            'id' => $this->id,
 
-            'fournisseur'       => new FournisseurResource($this->whenLoaded('fournisseur')),
+            'fournisseur' => new FournisseurResource($this->whenLoaded('fournisseur')),
 
-            'type_operation'    => [
+            'type_operation' => [
                 'id' => $this->typeOperation->id,
                 'libelle' => $this->typeOperation->libelle,
                 'nature' => $this->typeOperation->nature,
@@ -28,9 +28,11 @@ class FournisseurOperationResource extends JsonResource
                 'taux_change' => $this->devise->taux_change ?? null,
             ],
 
-            'taux_jour'         => $this->taux,
-            'montant'           => $this->montant,
-            'commentaire'       => $this->commentaire ?? null,
+            'date_operation' => $this->date_operation,
+            'reference' => $this->reference,
+            'taux_jour' => $this->taux,
+            'montant' => $this->montant,
+            'commentaire' => $this->commentaire ?? null,
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,
@@ -50,8 +52,8 @@ class FournisseurOperationResource extends JsonResource
                 'role' => $this->updatedBy->role,
             ] : null,
 
-            'created_at'        => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at'        => $this->updated_at?->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

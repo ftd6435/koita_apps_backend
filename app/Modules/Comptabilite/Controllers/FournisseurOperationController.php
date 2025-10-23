@@ -36,6 +36,10 @@ class FournisseurOperationController extends Controller
         $fields = $request->validated();
         $fields['created_by'] = Auth::id();
 
+        if(is_null($fields['reference'])){
+            $fields['reference'] = 'REF' . round(1000, 9999);
+        }
+
         $fournisseur_operation = FournisseurOperation::create($fields);
 
         return $this->successResponse($fournisseur_operation, "Operation du fournisseur enrégistrée avec succès.");
