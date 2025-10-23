@@ -16,10 +16,10 @@ class FondationDubaiService
             $updated = [];
 
             foreach ($payload['corrections'] as $item) {
-                $fondation = Fondation::with('initFondation')->find($item['id']); // on charge aussi la relation
+                $fondation = Fondation::with(['expedition.initLivraison'])->find($item['id']);
 
                 if ($fondation) {
-                    // 🔹 Mise à jour de la fondation
+                    // ✅ Mise à jour de la fondation
                     $fondation->update([
                         'poids_dubai'  => $item['poids_dubai'],
                         'carrat_dubai' => $item['carrat_dubai'],
@@ -27,10 +27,11 @@ class FondationDubaiService
                         'modify_by'    => Auth::id(),
                     ]);
 
-                    // 🔹 Mise à jour du statut de la livraison liée
-                    if ($fondation->expedition->initLivraison) {
-                        $initLivraison = $fondation->expedition->initLivraison;
-                        $initLivraison->update(['statut' => 'terminer']);
+                    // ✅ Mise à jour du statut de la livraison liée
+                    if ($fondation->expedition && $fondation->expedition->initLivraison) {
+                        $fondation->expedition->initLivraison->update([
+                            'statut' => 'terminer',
+                        ]);
                     }
 
                     $updated[] = $fondation;
