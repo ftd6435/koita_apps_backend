@@ -388,6 +388,54 @@ trait Helper
         return $historiques;
     }
 
+    /**
+     * Cette method retourn le poid total des barres non fixer
+     */
+    public function poidsNonFixer($fournisseurId)
+    {
+        $total_non_fixer = Barre::whereHas('achat', function ($query) use ($fournisseurId) {
+                $query->where('fournisseur_id', $fournisseurId);
+            })
+            ->where('is_fixed', false)
+            ->sum('poid_pure');
+
+        return $total_non_fixer ?? 0;
+    }
+
+    /**
+     * Cette method retourne le carrat moyen des barres non fixer
+     */
+    public function carratMoyenNonFixer($fournisseurId)
+    {
+        // Get all non-fixed barres for the fournisseur
+        $barres = Barre::whereHas('achat', function ($query) use ($fournisseurId) {
+                $query->where('fournisseur_id', $fournisseurId);
+            })->where('is_fixed', false)->get(['poid_pure', 'carrat_pure']);
+
+        // If no barres found, return 0
+        if ($barres->isEmpty()) {
+            return 0;
+        }
+
+        // Calculate sum of (poid_pure * carrat_pure)
+        $sum_weighted = $barres->sum(function ($barre) {
+            return ($barre->poid_pure ?? 0) * ($barre->carrat_pure ?? 0);
+        });
+
+        // Calculate sum of poid_pure
+        $sum_poid_pure = $barres->sum('poid_pure') ?? 0;
+
+        // Avoid division by zero
+        if ($sum_poid_pure == 0) {
+            return 0;
+        }
+
+        // Calculate weighted average
+        $carrat_moyen_non_fixer = $sum_weighted / $sum_poid_pure;
+
+        return $carrat_moyen_non_fixer;
+    }
+
     public function arroundir(int $precision, float $valeur): float
     {
         return round($valeur, $precision);
