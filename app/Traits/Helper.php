@@ -8,6 +8,7 @@ use App\Modules\Fixing\Models\Fixing;
 use App\Modules\Fixing\Models\FixingBarre;
 use App\Modules\Fondation\Models\Fondation;
 use App\Modules\Purchase\Models\Barre;
+use App\Modules\Settings\Models\Devise;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -254,8 +255,16 @@ trait Helper
         $operations = $this->soldeFournisseurOperations($fournisseurId);
         $fixings    = $this->montantTotalFixing($fournisseurId);
 
+        // Get all available currencies from the database
+        $allCurrencies = Devise::pluck('symbole')->toArray();
+
         // Convert to associative arrays for easy merging
         $totals = [];
+
+        // Initialize all currencies with 0
+        foreach ($allCurrencies as $symbole) {
+            $totals[$symbole] = 0;
+        }
 
         // Add operations balances
         foreach ($operations as $op) {
