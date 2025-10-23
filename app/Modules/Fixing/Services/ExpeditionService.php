@@ -198,9 +198,9 @@ class ExpeditionService
                
                 $details[] = [
                     'id_expedition' => $expedition->id,
-                    'poids_fondu'   => round($poids_fondu, 3),
+                    'poids_fondu'   => round($poids_fondu, 2),
                     'carrat_fondu'  => round($carrat_fondu, 2),
-                    'purete_local'  => round($purete_local, 3),
+                    'purete_local'  => round($purete_local, 2),
                 ];
             }
         }
