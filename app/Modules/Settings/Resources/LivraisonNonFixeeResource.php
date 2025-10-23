@@ -1,10 +1,9 @@
 <?php
-
 namespace App\Modules\Settings\Resources;
 
+use App\Traits\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Traits\Helper;
 
 class LivraisonNonFixeeResource extends JsonResource
 {
@@ -13,11 +12,11 @@ class LivraisonNonFixeeResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'        => $this->id,
-            'reference' => $this->reference ?? '',
+            'id'         => $this->id,
+            'reference'  => $this->reference ?? '',
 
             // 🔹 Liste des fondations non fixées
-            'barres' => $this->fondations
+            'barres'     => $this->fondations
                 ->whereNull('id_fixing')
                 ->map(function ($fondation) {
                     return [
@@ -27,10 +26,14 @@ class LivraisonNonFixeeResource extends JsonResource
                         'carrat_fondu'        => (float) $fondation->carrat_fondu,
 
                         // ✅ Calcul de la pureté locale avec ton helper
-                        'purete_locale'       => $this->pureter(
-                            (float) $fondation->poids_fondu,
-                            (float) $fondation->carrat_fondu
+                        'purete_locale'       => $this->arroundir(
+                            2,
+                            $this->pureter(
+                                (float) $fondation->poids_fondu,
+                                (float) $fondation->carrat_fondu
+                            )
                         ),
+
                     ];
                 })
                 ->values(),
