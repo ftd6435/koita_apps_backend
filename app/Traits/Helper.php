@@ -301,8 +301,8 @@ trait Helper
             return collect([]);
         }
 
-        // ✅ 1. Transform operations (if any)
-        $operations = $fournisseur->operations?->map(function ($op) {
+        // ✅ 1. Transform operations (if any) - convert to base collection
+        $operations = collect($fournisseur->operations?->map(function ($op) {
             $nature = $op->typeOperation?->nature ?? 0;
             $montant = (float) ($op->montant ?? 0);
             $dateOperation = $op->date_operation ? Carbon::parse($op->date_operation)->format('d-m-Y') : '';
@@ -315,10 +315,10 @@ trait Helper
                 'debit' => $nature == 0 ? $montant : 0,
                 'symbole' => $op->devise?->symbole ?? 'N/A',
             ];
-        }) ?? collect([]);
+        }) ?? []);
 
-        // ✅ 2. Transform fixings (if any)
-        $fixings = $fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
+        // ✅ 2. Transform fixings (if any) - convert to base collection
+        $fixings = collect($fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
             $devise = $fixing->devise;
             $symbole = $devise?->symbole ?? 'N/A';
             $hasBarres = $fixing->fixingBarres?->count() > 0;
@@ -345,9 +345,9 @@ trait Helper
                 'debit' => 0,
                 'symbole' => $symbole,
             ];
-        }) ?? collect([]);
+        }) ?? []);
 
-        // ✅ 3. Merge both collections (even if one is empty)
+        // ✅ 3. Merge both collections (now both are base collections)
         $allTransactions = $operations->merge($fixings);
 
         // ✅ If no transactions at all → return empty
