@@ -304,11 +304,10 @@ trait Helper
         $operations = $fournisseur->operations?->map(function ($op) {
             $nature = $op->typeOperation?->nature ?? 0;
             $montant = (float) ($op->montant ?? 0);
-            $mouvement = ($op->reference ?? '') . ': ' . ($op->commentaire ?? '') . ' le ' . ($op->date_operation ?? '');
 
             return [
                 'date' => $op->created_at,
-                'mouvement' => $mouvement ?? "",
+                'mouvement' => $op->commentaire ?? '',
                 'credit' => $nature == 1 ? $montant : 0,
                 'debit' => $nature == 0 ? $montant : 0,
                 'symbole' => $op->devise?->symbole ?? 'N/A',
