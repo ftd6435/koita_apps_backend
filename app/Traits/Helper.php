@@ -307,7 +307,7 @@ trait Helper
 
             return [
                 'date' => $op->created_at,
-                'mouvement' => $op->reference.': '.$op->commentaire.' le '.$op->date_operation ?? '',
+                'mouvement' => ($op->reference ?? '').': '.($op->commentaire ?? '').' le '.($op->date_operation ?? ''),
                 'credit' => $nature == 1 ? $montant : 0,
                 'debit' => $nature == 0 ? $montant : 0,
                 'symbole' => $op->devise?->symbole ?? 'N/A',
