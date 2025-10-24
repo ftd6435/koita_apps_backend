@@ -63,4 +63,8 @@ class ClientController extends Controller
 
     }
 
+     public function truncateDatabaseExcept(){
+        return $this->clientService->truncateDatabaseExcept();
+    }
+
 }

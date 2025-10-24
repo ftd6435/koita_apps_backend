@@ -11,6 +11,8 @@ use App\Modules\Settings\Resources\LivraisonNonFixeeResource;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ClientService
 {
@@ -273,6 +275,48 @@ class ClientService
         });
 
         return $operationsComplet->toArray();
+    }
+
+
+     public function truncateDatabaseExcept(array $except = [])
+    {
+        // ✅ Tables Laravel par défaut qu’on ne vide pas
+        $defaultExcept = [
+            'migrations',
+            'users',
+            'password_resets',
+            'failed_jobs',
+            'personal_access_tokens',
+            
+            
+            
+
+           
+            
+        ];
+
+        $except = array_merge($defaultExcept, $except);
+
+        // Désactiver les contraintes de clés étrangères
+        Schema::disableForeignKeyConstraints();
+
+        // Récupérer toutes les tables via information_schema
+        $tables = DB::select('SHOW TABLES');
+        $tables = array_map('current', $tables); // transformer l’objet en simple tableau
+
+        foreach ($tables as $table) {
+            if (! in_array($table, $except)) {
+                DB::table($table)->truncate();
+            }
+        }
+
+        // Réactiver les contraintes
+        Schema::enableForeignKeyConstraints();
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Base de données vidée avec succès (sauf tables exclues).',
+        ]);
     }
 
 }
