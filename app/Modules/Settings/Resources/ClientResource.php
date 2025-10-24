@@ -17,6 +17,7 @@ class ClientResource extends JsonResource
 
         // 🔹 Relevé complet (fixings + opérations clients)
         $releve = $clientService->getReleveClient($this->id);
+        $stock = $clientService->calculerStockClient($this->id);
 
         return array_filter([
             'id'             => $this->id,
@@ -35,6 +36,10 @@ class ClientResource extends JsonResource
 
             // 📊 Relevé du compte client (fixings + opérations)
             'releve_client'  => $releve,
+            
+            'total_livre'    => $stock['total_livre'] ?? 0,
+            'total_fixing'   => $stock['total_fixing'] ?? 0,
+            'reste_stock'    => $stock['reste_stock'] ?? 0,
 
             // 🔹 Informations d’audit
             'created_by'     => $this->createur?->name,
