@@ -179,7 +179,7 @@ class FixingClientService
             ], 500);
         }
     }
-   
+
     public function calculerFacture(int $id_fixing): array
     {
         $fixing = FixingClient::with('client')->find($id_fixing);
@@ -277,6 +277,34 @@ class FixingClientService
     {
         $factor = pow(10, $decimals);
         return floor($value * $factor) / $factor;
+    }
+
+    public function statistiquesFixing()
+    {
+        try {
+            $stats = FixingClient::selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
+            return response()->json([
+                'status'  => 200,
+                'message' => 'Statistiques des fixings récupérées avec succès.',
+                'data'    => [
+                    'en_attente' => $stats['en attente'] ?? 0,
+                    'confirmer'  => $stats['confirmer'] ?? 0,
+                    'valider'    => $stats['valider'] ?? 0,
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status'  => 500,
+                'message' => 'Erreur lors de la récupération des statistiques.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
 
 }

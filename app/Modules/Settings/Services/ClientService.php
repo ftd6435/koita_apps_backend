@@ -278,48 +278,45 @@ class ClientService
         return $operationsComplet->toArray();
     }
 
-
     public function calculerStockClient(int $id_client): array
-{
-    // 🔹 Récupération de toutes les livraisons du client
-    $livraisonIds = InitLivraison::where('id_client', $id_client)->pluck('id');
+    {
+        // 🔹 Récupération de toutes les livraisons du client
+        $livraisonIds = InitLivraison::where('id_client', $id_client)->pluck('id');
 
-    if ($livraisonIds->isEmpty()) {
+        if ($livraisonIds->isEmpty()) {
+            return [
+                'id_client'    => $id_client,
+                'total_livre'  => 0.0,
+                'total_fixing' => 0.0,
+                'reste_stock'  => 0.0,
+            ];
+        }
+
+        // 🔹 Total livré : toutes les fondations issues des expéditions de ces livraisons
+        $totalLivre = Fondation::whereHas('expedition', function ($q) use ($livraisonIds) {
+            $q->whereIn('id_init_livraison', $livraisonIds);
+        })
+            ->sum('poids_fondu');
+
+        // 🔹 Total fixé : uniquement les fondations dont id_fixing n'est pas null
+        $totalFixing = Fondation::whereHas('expedition', function ($q) use ($livraisonIds) {
+            $q->whereIn('id_init_livraison', $livraisonIds);
+        })
+            ->whereNotNull('id_fixing')
+            ->sum('poids_fondu');
+
+        // 🔹 Calcul du reste
+        $resteStock = max($totalLivre - $totalFixing, 0);
+
         return [
             'id_client'    => $id_client,
-            'total_livre'  => 0.0,
-            'total_fixing' => 0.0,
-            'reste_stock'  => 0.0,
+            'total_livre'  => round((float) $totalLivre, 2),
+            'total_fixing' => round((float) $totalFixing, 2),
+            'reste_stock'  => round((float) $resteStock, 2),
         ];
     }
 
-    // 🔹 Total livré : toutes les fondations issues des expéditions de ces livraisons
-    $totalLivre = Fondation::whereHas('expedition', function ($q) use ($livraisonIds) {
-            $q->whereIn('id_init_livraison', $livraisonIds);
-        })
-        ->sum('poids_fondu');
-
-    // 🔹 Total fixé : uniquement les fondations dont id_fixing n'est pas null
-    $totalFixing = Fondation::whereHas('expedition', function ($q) use ($livraisonIds) {
-            $q->whereIn('id_init_livraison', $livraisonIds);
-        })
-        ->whereNotNull('id_fixing')
-        ->sum('poids_fondu');
-
-    // 🔹 Calcul du reste
-    $resteStock = max($totalLivre - $totalFixing, 0);
-
-    return [
-        'id_client'    => $id_client,
-        'total_livre'  => round((float) $totalLivre, 2),
-        'total_fixing' => round((float) $totalFixing, 2),
-        'reste_stock'  => round((float) $resteStock, 2),
-    ];
-}
-
-
-
-     public function truncateDatabaseExcept(array $except = [])
+    public function truncateDatabaseExcept(array $except = [])
     {
         // ✅ Tables Laravel par défaut qu’on ne vide pas
         $defaultExcept = [
@@ -328,12 +325,7 @@ class ClientService
             'password_resets',
             'failed_jobs',
             'personal_access_tokens',
-            
-            
-            
 
-           
-            
         ];
 
         $except = array_merge($defaultExcept, $except);
@@ -359,5 +351,8 @@ class ClientService
             'message' => 'Base de données vidée avec succès (sauf tables exclues).',
         ]);
     }
+
+   
+
 
 }

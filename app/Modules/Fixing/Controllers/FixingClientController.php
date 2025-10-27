@@ -1,11 +1,10 @@
 <?php
-
 namespace App\Modules\Fixing\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Fixing\Requests\StoreFixingClientRequest;
-use App\Modules\Fixing\Services\FixingClientService;
 use App\Modules\Fixing\Requests\UpdateFixingClientRequest;
+use App\Modules\Fixing\Services\FixingClientService;
 
 class FixingClientController extends Controller
 {
@@ -40,8 +39,7 @@ class FixingClientController extends Controller
         return $this->fixingClientService->getOne($id);
     }
 
-
-     public function update(UpdateFixingClientRequest $request, int $id)
+    public function update(UpdateFixingClientRequest $request, int $id)
     {
         return $this->fixingClientService->update($id, $request->validated());
     }
@@ -52,4 +50,11 @@ class FixingClientController extends Controller
     {
         return $this->fixingClientService->delete($id);
     }
+
+    public function statistiques()
+    {
+        return $this->fixingClientService->statistiquesFixing();
+    }
+    
+
 }
