@@ -130,7 +130,46 @@ class DiversService
         }
     }
 
-   
+    // public function calculerSoldeDivers(int $id_divers, int $cacheMinutes = 5): array
+    // {
+    //     return Cache::remember("solde_divers_{$id_divers}", now()->addMinutes($cacheMinutes), function () use ($id_divers) {
+
+    //         $operations = OperationDivers::with(['typeOperation', 'devise'])
+    //             ->where('id_divers', $id_divers)
+    //             ->get();
+
+    //         $soldes = [];
+
+    //         foreach ($operations as $op) {
+    //             $devise  = strtoupper($op->devise?->symbole ?? 'GNF');
+    //             $nature  = $op->typeOperation?->nature ?? 1;
+    //             $montant = (float) $op->montant;
+    //             $taux    = (float) ($op->taux_jour ?? 1);
+
+    //             // ✅ Si devise est GNF → pas de conversion, on ajoute normalement
+    //             if ($devise === 'GNF') {
+    //                 $soldes['gnf'] = ($soldes['gnf'] ?? 0)
+    //                      + ($nature == 1 ? $montant : -$montant);
+    //                 continue;
+    //             }
+
+    //             // ✅ Si taux_jour ≠ 1 → conversion en GNF uniquement ✅
+    //             if ($taux != 1) {
+    //                 $montantConverti = $montant * $taux;
+    //                 $soldes['gnf']   = ($soldes['gnf'] ?? 0)
+    //                      + ($nature == 1 ? $montantConverti : -$montantConverti);
+    //             } else {
+    //                 // ✅ Sinon, solde dans la devise d'origine (USD ou autre)
+    //                 $soldes[strtolower($devise)] = ($soldes[strtolower($devise)] ?? 0)
+    //                      + ($nature == 1 ? $montant : -$montant);
+    //             }
+    //         }
+
+    //         return collect($soldes)
+    //             ->map(fn($s) => round($s, 2))
+    //             ->toArray();
+    //     });
+    // }
 
     public function calculerSoldeDivers(int $id_divers, int $cacheMinutes = 5): array
     {
@@ -140,7 +179,13 @@ class DiversService
                 ->where('id_divers', $id_divers)
                 ->get();
 
-            $soldes = [];
+            // ✅ Variables flux à ajouter
+            $entrees_usd = 0;
+            $sorties_usd = 0;
+            $entrees_gnf = 0;
+            $sorties_gnf = 0;
+
+            $soldes = []; // ✅ Garde l’existant
 
             foreach ($operations as $op) {
                 $devise  = strtoupper($op->devise?->symbole ?? 'GNF');
@@ -148,28 +193,57 @@ class DiversService
                 $montant = (float) $op->montant;
                 $taux    = (float) ($op->taux_jour ?? 1);
 
-                // ✅ Si devise est GNF → pas de conversion, on ajoute normalement
+                // ✅ Si devise est GNF → flux GNF
                 if ($devise === 'GNF') {
+                    if ($nature == 1) {
+                        $entrees_gnf += $montant;
+                    } else {
+                        $sorties_gnf += $montant;
+                    }
+
                     $soldes['gnf'] = ($soldes['gnf'] ?? 0)
                          + ($nature == 1 ? $montant : -$montant);
+
                     continue;
                 }
 
-                // ✅ Si taux_jour ≠ 1 → conversion en GNF uniquement ✅
+                // ✅ Si devise ≠ GNF → gestion USD
                 if ($taux != 1) {
+                    // ✅ Conversion → flux GNF
                     $montantConverti = $montant * $taux;
-                    $soldes['gnf']   = ($soldes['gnf'] ?? 0)
+
+                    if ($nature == 1) {
+                        $entrees_gnf += $montantConverti;
+                    } else {
+                        $sorties_gnf += $montantConverti;
+                    }
+
+                    $soldes['gnf'] = ($soldes['gnf'] ?? 0)
                          + ($nature == 1 ? $montantConverti : -$montantConverti);
                 } else {
-                    // ✅ Sinon, solde dans la devise d'origine (USD ou autre)
+                    // ✅ Flux USD normal
+                    if ($nature == 1) {
+                        $entrees_usd += $montant;
+                    } else {
+                        $sorties_usd += $montant;
+                    }
+
                     $soldes[strtolower($devise)] = ($soldes[strtolower($devise)] ?? 0)
                          + ($nature == 1 ? $montant : -$montant);
                 }
             }
 
-            return collect($soldes)
-                ->map(fn($s) => round($s, 2))
-                ->toArray();
+            // ✅ Retour complet en incluant les flux
+            return [
+                'usd'         => round($soldes['usd'] ?? 0, 2),
+                'gnf'         => round($soldes['gnf'] ?? 0, 2),
+
+                // ✅ Ajout demandé : flux
+                'entrees_usd' => round($entrees_usd, 2),
+                'sorties_usd' => round($sorties_usd, 2),
+                'entrees_gnf' => round($entrees_gnf, 2),
+                'sorties_gnf' => round($sorties_gnf, 2),
+            ];
         });
     }
 

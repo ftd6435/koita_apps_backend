@@ -165,6 +165,44 @@ class ClientService
     /**
      * 🔹 Calcul du solde par devise (USD / GNF)
      */
+    // public function calculerSoldeClient(int $id_client): array
+    // {
+    //     // 🔹 Fonction interne pour calculer le total par devise et par nature
+    //     $getTotalParDevise = function (string $deviseSymbole, int $nature) use ($id_client) {
+    //         return OperationClient::where('id_client', $id_client)
+    //             ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature)) // 1 = entrée, 0 = sortie
+    //             ->whereHas('devise', fn($q) => $q->where('symbole', $deviseSymbole))
+    //             ->sum('montant');
+    //     };
+
+    //     // 🔹 Totaux des opérations
+    //     $entreesUSD = $getTotalParDevise('USD', 1);
+    //     $entreesGNF = $getTotalParDevise('GNF', 1);
+
+    //     $sortiesUSD = $getTotalParDevise('USD', 0);
+    //     $sortiesGNF = $getTotalParDevise('GNF', 0);
+
+    //     // 🔹 Factures (sorties automatiques liées aux fixings)
+    //     $fixings = FixingClient::with('devise')->where('id_client', $id_client)->get();
+
+    //     foreach ($fixings as $fixing) {
+    //         $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
+    //         $montant = $calcul['total_facture'] ?? 0;
+
+    //         if ($fixing->devise?->symbole === 'USD') {
+    //             $sortiesUSD += $montant;
+    //         } elseif ($fixing->devise?->symbole === 'GNF') {
+    //             $sortiesGNF += $montant;
+    //         }
+    //     }
+
+    //     // 🔹 Solde final
+    //     return [
+    //         'solde_usd' => round($entreesUSD - $sortiesUSD, 2),
+    //         'solde_gnf' => round($entreesGNF - $sortiesGNF, 2),
+    //     ];
+    // }
+
     public function calculerSoldeClient(int $id_client): array
     {
         // 🔹 Fonction interne pour calculer le total par devise et par nature
@@ -198,8 +236,14 @@ class ClientService
 
         // 🔹 Solde final
         return [
-            'solde_usd' => round($entreesUSD - $sortiesUSD, 2),
-            'solde_gnf' => round($entreesGNF - $sortiesGNF, 2),
+            'solde_usd'   => round($entreesUSD - $sortiesUSD, 2),
+            'solde_gnf'   => round($entreesGNF - $sortiesGNF, 2),
+
+            // ✅ Ajout demandé : flux des opérations
+            'entrees_usd' => round($entreesUSD, 2),
+            'sorties_usd' => round($sortiesUSD, 2),
+            'entrees_gnf' => round($entreesGNF, 2),
+            'sorties_gnf' => round($sortiesGNF, 2),
         ];
     }
 
