@@ -30,4 +30,5 @@ Route::middleware('auth:sanctum')->prefix('v1/dashboard')->group(function(){
     Route::get('/statistique', [UserController::class, 'statistic']);
     Route::get('/fixings-hebdomadaire', [UserController::class, 'weeklyFixings']);
     Route::get('/fixings-journalier', [UserController::class, 'dailyFixings']);
+    Route::get('/transaction-journaliere', [UserController::class, 'dailyOperations']);
 });

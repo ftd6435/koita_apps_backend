@@ -8,6 +8,9 @@ use App\Modules\Administration\Models\User;
 use App\Modules\Administration\Requests\StoreUserRequest;
 use App\Modules\Administration\Requests\UpdatePasswordRequest;
 use App\Modules\Administration\Resources\UserResource;
+use App\Modules\Comptabilite\Models\FournisseurOperation;
+use App\Modules\Comptabilite\Models\OperationClient;
+use App\Modules\Comptabilite\Models\OperationDivers;
 use App\Modules\Fixing\Models\Fixing;
 use App\Modules\Fixing\Resources\FixingResource;
 use App\Modules\Purchase\Models\Barre;
@@ -106,6 +109,74 @@ class UserController extends Controller
         $fixings = Fixing::whereDate('created_at', Carbon::today())->orderBy('created_at', 'desc')->get();
 
         return $this->successResponse(FixingResource::collection($fixings), "Liste des fixings journalier bien chargé.");
+    }
+
+    public function dailyOperations()
+    {
+        $today = now()->toDateString(); // Today's date (e.g. 2025-10-27)
+
+        // 🟦 Fournisseur operations
+        $fournisseurOps = FournisseurOperation::with(['fournisseur', 'typeOperation', 'devise'])
+            ->whereDate('date_operation', $today)
+            ->get()
+            ->map(function ($op) {
+                return [
+                    'reference' => $op->reference,
+                    'date_operation' => $op->date_operation,
+                    'montant' => $op->montant,
+                    'devise' => $op->devise->symbole ?? null,
+                    'type_operation' => $op->typeOperation->libelle ?? null,
+                    'nature' => $op->typeOperation->nature ?? null,
+                    'fullname' => $op->fournisseur->name,
+                    'type' => 'fournisseur',
+                    'commentaire' => $op->commentaire,
+                ];
+            });
+
+        // 🟩 Client operations
+        $clientOps = OperationClient::with(['client', 'typeOperation', 'devise'])
+            ->whereDate('date_operation', $today)
+            ->get()
+            ->map(function ($op) {
+                return [
+                    'reference' => $op->reference,
+                    'date_operation' => $op->date_operation,
+                    'montant' => $op->montant,
+                    'devise' => $op->devise->symbole ?? null,
+                    'type_operation' => $op->typeOperation->libelle ?? null,
+                    'nature' => $op->typeOperation->nature ?? null,
+                    'fullname' => $op->client->nom_complet ?? null,
+                    'type' => $op->client->type_client ?? null,
+                    'commentaire' => $op->commentaire ?? null,
+                ];
+            });
+
+        // 🟨 Divers operations
+        $diversOps = OperationDivers::with(['divers', 'typeOperation', 'devise'])
+            ->whereDate('date_operation', $today)
+            ->get()
+            ->map(function ($op) {
+                return [
+                    'reference' => $op->reference,
+                    'date_operation' => $op->date_operation,
+                    'montant' => $op->montant,
+                    'devise' => $op->devise->symbole ?? null,
+                    'type_operation' => $op->typeOperation->libelle ?? null,
+                    'nature' => $op->typeOperation->nature ?? null,
+                    'fullname' => $op->divers->name ?? null,
+                    'type' => $op->divers->type ?? null,
+                    'commentaire' => $op->commentaire ?? null,
+                ];
+            });
+
+        // 🔹 Combine all 3 collections into one
+        $dailyOperations = $fournisseurOps
+            ->concat($clientOps)
+            ->concat($diversOps)
+            ->sortByDesc('date_operation')
+            ->values();
+
+        return $this->successResponse($dailyOperations, "Liste des opérations journalières bien chargée.");
     }
 
     public function show(string $id)
