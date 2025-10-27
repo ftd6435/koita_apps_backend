@@ -3,12 +3,18 @@
 namespace App\Modules\Administration\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Administration\Models\Fournisseur;
 use App\Modules\Administration\Models\User;
 use App\Modules\Administration\Requests\StoreUserRequest;
 use App\Modules\Administration\Requests\UpdatePasswordRequest;
 use App\Modules\Administration\Resources\UserResource;
+use App\Modules\Fixing\Models\Fixing;
+use App\Modules\Fixing\Resources\FixingResource;
+use App\Modules\Purchase\Models\Barre;
+use App\Modules\Settings\Models\Client;
 use App\Traits\ApiResponses;
 use App\Traits\ImageUpload;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -30,6 +36,76 @@ class UserController extends Controller
         $user = User::find($id);
 
         return $this->successResponse(new UserResource($user), "Information de l'utilisateur connecté bien chargé.");
+    }
+
+    public function statistic()
+    {
+        $clients = Client::count();
+        $suppliers = Fournisseur::count();
+        $users = User::count();
+        $pending_fixings = Fixing::where('status', 'en attente')->count();
+        $unfixed_poids = Barre::where('is_fixed', false)->sum('poid_pure');
+
+        $statistic = [
+            'clients' => $clients,
+            'suppliers' => $suppliers,
+            'users' => $users,
+            'pending_fixings' => $pending_fixings,
+            'unfixed_poids' => $unfixed_poids,
+        ];
+
+        return $this->successResponse($statistic, "Statistique du tableau de board bien chargé");
+    }
+
+    public function weeklyFixings()
+    {
+        $startOfWeek = now()->startOfWeek();
+        $endOfWeek = now()->endOfWeek();
+
+        $fixings = Fixing::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->with('fixingBarres.barre')
+            ->get();
+
+        // Group fixings by date for efficient lookup
+        $fixingsByDate = $fixings->groupBy(function ($fixing) {
+            return $fixing->created_at->format('d-m-Y');
+        });
+
+        // Create array with dates and day names using Carbon French locale
+        $weeklyData = [];
+        for ($date = $startOfWeek->copy(); $date->lte($endOfWeek); $date->addDay()) {
+            $dateKey = $date->format('d-m-Y');
+
+            // Calculate total weight for this date
+            $totalWeight = 0;
+            if (isset($fixingsByDate[$dateKey])) {
+                foreach ($fixingsByDate[$dateKey] as $fixing) {
+                    if($fixing->fixingBarres->isNotEmpty()){
+                        foreach($fixing->fixingBarres as $fixingBarre){
+                            $totalWeight += $fixingBarre->barre->poid_pure;
+                        }
+                    }else{
+                        $totalWeight += $fixing->poids_pro ?? 0;
+                    }
+                }
+            }
+
+            $weeklyData[] = [
+                'date' => $dateKey,
+                'day' => $date->locale('fr')->isoFormat('dddd'), // Lundi, Mardi, etc.
+                'day_short' => $date->locale('fr')->isoFormat('ddd'), // Lun, Mar, etc.
+                'total_weight' => $totalWeight,
+            ];
+        }
+
+        return $this->successResponse($weeklyData, "Fixings hebdomadaires chargés avec succès");
+    }
+
+    public function dailyFixings()
+    {
+        $fixings = Fixing::whereDate('created_at', Carbon::today())->orderBy('created_at', 'desc')->get();
+
+        return $this->successResponse(FixingResource::collection($fixings), "Liste des fixings journalier bien chargé.");
     }
 
     public function show(string $id)

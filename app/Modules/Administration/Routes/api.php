@@ -25,3 +25,9 @@ Route::middleware('auth:sanctum')->prefix('v1/admins')->group(function(){
     Route::delete('fournisseurs/delete/{id}', [FournisseurController::class, 'forceDelete']);
     Route::apiResource("fournisseurs", FournisseurController::class);
 });
+
+Route::middleware('auth:sanctum')->prefix('v1/dashboard')->group(function(){
+    Route::get('/statistique', [UserController::class, 'statistic']);
+    Route::get('/fixings-hebdomadaire', [UserController::class, 'weeklyFixings']);
+    Route::get('/fixings-journalier', [UserController::class, 'dailyFixings']);
+});
