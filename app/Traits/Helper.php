@@ -68,7 +68,7 @@ trait Helper
 
         $result = $poids_total > 0 ? ($multplication / $poids_total) : 0;
 
-        return number_format($result, 2) ?? 0;
+        return $result;
     }
 
     protected function poidsTimeCarrat($fixing_id)
