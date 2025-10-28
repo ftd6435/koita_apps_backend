@@ -171,13 +171,13 @@ class CaisseService
 
     public function calculerSoldeGlobal(): array
     {
-        // ✅ Solde Caisse (seuls flux légitimes)
+        // ✅ Solde Caisse
         $soldeCaisse = $this->calculerSoldeCaisse();
 
         $total_usd = $soldeCaisse['solde_usd'];
         $total_gnf = $soldeCaisse['solde_gnf'];
 
-        // ✅ Flux global = flux caisse uniquement
+        // ✅ Flux global = flux CAISSE uniquement AU DÉPART
         $entrees_usd = $soldeCaisse['entrees_usd'];
         $sorties_usd = $soldeCaisse['sorties_usd'];
         $entrees_gnf = $soldeCaisse['entrees_gnf'];
@@ -196,10 +196,17 @@ class CaisseService
 
             $soldeClientsUSD += $s['solde_usd'];
             $soldeClientsGNF += $s['solde_gnf'];
+
+            // ✅ Ajout flux CLIENTS au flux GLOBAL
             $entreeClientsUSD += $s['entrees_usd'];
             $entreeClientsGNF += $s['entrees_gnf'];
             $sortieClientsUSD += $s['sorties_usd'];
             $sortieClientsGNF += $s['sorties_gnf'];
+
+            $entrees_usd += $s['entrees_usd'];
+            $sorties_usd += $s['sorties_usd'];
+            $entrees_gnf += $s['entrees_gnf'];
+            $sorties_gnf += $s['sorties_gnf'];
 
             $total_usd += $s['solde_usd'];
             $total_gnf += $s['solde_gnf'];
@@ -218,21 +225,27 @@ class CaisseService
 
             $soldeDiversUSD += $s['usd'];
             $soldeDiversGNF += $s['gnf'];
+
+            // ✅ Ajout flux DIVERS au flux GLOBAL
             $entreeDiversUSD += $s['entrees_usd'];
             $entreeDiversGNF += $s['entrees_gnf'];
             $sortieDiversUSD += $s['sorties_usd'];
             $sortieDiversGNF += $s['sorties_gnf'];
 
+            $entrees_usd += $s['entrees_usd'];
+            $sorties_usd += $s['sorties_usd'];
+            $entrees_gnf += $s['entrees_gnf'];
+            $sorties_gnf += $s['sorties_gnf'];
+
             $total_usd += $s['usd'];
             $total_gnf += $s['gnf'];
         }
 
-        // ✅ Résultat final avec Détails complet
         return [
             'solde_usd'   => round($total_usd, 2),
             'solde_gnf'   => round($total_gnf, 2),
 
-            // ✅ Flux global = caisse seulement !
+            // ✅ Flux global CAISSE + CLIENTS + DIVERS
             'entrees_usd' => round($entrees_usd, 2),
             'sorties_usd' => round($sorties_usd, 2),
             'entrees_gnf' => round($entrees_gnf, 2),
