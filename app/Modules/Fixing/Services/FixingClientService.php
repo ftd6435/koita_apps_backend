@@ -265,7 +265,7 @@ class FixingClientService
             'prix_unitaire' => $prixUnitaireTronque,
             'poids_total'   => round($poidsTotal, 2),
             'carrat_moyen'  => $carratMoyen,
-            'purete_totale' => $pureteTotale,
+            'purete_totale' =>round($pureteTotale,2) ,
             'fondations'    => $details,
             'total_facture' => $totalFactureTronque,
         ];
@@ -288,7 +288,6 @@ class FixingClientService
                 ->pluck('total', 'status')
                 ->toArray();
             $poids_fixer=$this->fixingsClientSemaine();
-            $poids_fixer_value = $poids_fixer['value'];
 
             return response()->json([
                 'status'  => 200,
@@ -296,7 +295,7 @@ class FixingClientService
                 'data'    => [
                     'en_attente' => $stats['en attente'] ?? 0,
                     'confirmer'  => $stats['confirmer'] ?? 0,
-                    'poids_fixer' => round($poids_fixer_value, 2)
+                    'poids_fixer' => $poids_fixer
 
                 ],
             ], 200);
@@ -327,7 +326,8 @@ class FixingClientService
             $total = 0;
             foreach ($fixings as $fixing) {
                 $calcul = app(FixingClientService::class)->calculerFacture($fixing->id);
-                $total += (float) ($calcul['purete_totale'] ?? 0);
+                $total += (float)($calcul['purete_totale'] ?? 0);
+
             }
 
             $statsFixingsSemaine[] = [
