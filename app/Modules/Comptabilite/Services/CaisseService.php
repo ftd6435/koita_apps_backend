@@ -249,6 +249,13 @@ class CaisseService
         $devises = Devise::all();
         $soldeGlobalFournisseurs = [];
 
+        // Initialize the array with all currency keys set to 0
+        foreach($devises as $devise){
+            $symbole = strtolower($devise->symbole);
+            $soldeGlobalFournisseurs['entrees_' . $symbole] = 0;
+            $soldeGlobalFournisseurs['sorties_' . $symbole] = 0;
+        }
+
         foreach($fournisseurs as $fournisseur){
             $soldeFournisseur = $this->supplierBalancePerCurrency($fournisseur->id);
 
@@ -258,11 +265,11 @@ class CaisseService
                 $soldeGlobalFournisseurs['sorties_' . $symbole] += round($soldeFournisseur['sorties_' . $symbole], 2); 
 
                 if($symbole == 'usd'){
-                    $total_usd += $soldeFournisseur['entrees_usd'] - $soldeFournisseur['sorties_usd'];
+                    $total_usd += $soldeFournisseur['entrees_' . $symbole] - $soldeFournisseur['sorties_' . $symbole];
                 }
 
                 if($symbole == 'gnf'){
-                    $total_gnf += $soldeFournisseur['entrees_gnf'] - $soldeFournisseur['sorties_gnf'];
+                    $total_gnf += $soldeFournisseur['entrees_' . $symbole] - $soldeFournisseur['sorties_' . $symbole];
                 }
             }
         }
