@@ -4,6 +4,7 @@ namespace App\Modules\Fixing\Services;
 use App\Modules\Fixing\Models\FixingClient;
 use App\Modules\Fixing\Resources\FixingClientResource;
 use App\Modules\Fondation\Models\Fondation;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -286,6 +287,7 @@ class FixingClientService
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->toArray();
+            $poids_fixer=$this->fixingsClientSemaine();
 
             return response()->json([
                 'status'  => 200,
@@ -293,7 +295,7 @@ class FixingClientService
                 'data'    => [
                     'en_attente' => $stats['en attente'] ?? 0,
                     'confirmer'  => $stats['confirmer'] ?? 0,
-                    'valider'    => $stats['valider'] ?? 0,
+                    'poids_fixer'=>$poids_fixer
                 ],
             ], 200);
 
@@ -305,6 +307,35 @@ class FixingClientService
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function fixingsClientSemaine(): array
+    {
+        $joursSemaine        = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+        $aujourdhui          = Carbon::today();
+        $statsFixingsSemaine = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $jour = $aujourdhui->startOfWeek()->addDays($i);
+
+            // ✅ Récupère les fixings client du jour
+            $fixings = FixingClient::whereDate('created_at', $jour)->get();
+
+            // ✅ Calcul des montants (comme dans ton code solde client)
+            $total = 0;
+            foreach ($fixings as $fixing) {
+                $calcul = app(FixingClientService::class)->calculerFacture($fixing->id);
+                $total += (float) ($calcul['purete_totale'] ?? 0);
+            }
+
+            $statsFixingsSemaine[] = [
+                'jour'  => $joursSemaine[$i],
+                'total' => (float) $total,
+                'date'  => $jour->format('Y-m-d'), // ✅ utile pour debug
+            ];
+        }
+
+        return $statsFixingsSemaine;
     }
 
 }
