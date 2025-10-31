@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Settings\Requests\StoreClientRequest;
 use App\Modules\Settings\Requests\UpdateClientRequest;
 use App\Modules\Settings\Services\ClientService;
+use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
@@ -63,8 +64,18 @@ class ClientController extends Controller
 
     }
 
-     public function truncateDatabaseExcept(){
+    public function truncateDatabaseExcept()
+    {
         return $this->clientService->truncateDatabaseExcept();
+    }
+
+    public function getReleveClientPeriode(Request $request)
+    {
+        $id_client  = $request->input('id_client');
+        $date_debut = $request->input('date_debut');
+        $date_fin   = $request->input('date_fin');
+
+        return $this->clientService->getReleveClientPeriode1($id_client, $date_debut, $date_fin);
     }
 
 }
