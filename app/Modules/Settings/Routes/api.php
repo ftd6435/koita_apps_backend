@@ -9,7 +9,7 @@ Route::middleware('auth:sanctum')->prefix('v1/settings/')->group(function () {
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('devises', DeviseController::class);
     Route::apiResource('divers', DiversController::class);
-    Route::get('clients/releve-periode', [ClientController::class, 'getReleveClientPeriode']);
+    Route::get('releve-periode/clients', [ClientController::class, 'getReleveClientPeriode']);
 
     //truncateDatabaseExcept
     Route::delete('vider-database', [ClientController::class,'truncateDatabaseExcept']);
