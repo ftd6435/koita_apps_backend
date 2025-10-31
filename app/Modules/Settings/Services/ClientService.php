@@ -264,12 +264,12 @@ class ClientService
             ], 404);
         }
 
-        //$releve = $this->getReleveClientParPeriode($id_client, $date_debut, $date_fin);
+        $releve = $this->getReleveClientParPeriode($id_client, $date_debut, $date_fin);
 
         return response()->json([
             'status'  => 200,
             'message' => 'Relevé du client récupéré avec succès.',
-            'data'    => [],
+            'data'    => $releve,
         ], 200);
 
     } catch (\Exception $e) {
