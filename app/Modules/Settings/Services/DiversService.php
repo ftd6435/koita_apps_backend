@@ -247,6 +247,51 @@ class DiversService
         });
     }
 
+    // public function getReleveDivers(int $id_divers): array
+    // {
+    //     $operations = OperationDivers::with(['typeOperation', 'devise'])
+    //         ->where('id_divers', $id_divers)
+    //         ->orderByDesc('date_operation')
+    //         ->orderByDesc('created_at')
+    //         ->get()
+    //         ->map(function ($op) {
+    //             $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
+
+    //             return [
+    //                 'date'        => $op->date_operation
+    //                     ? (is_string($op->date_operation)
+    //                         ? $op->date_operation
+    //                         : $op->date_operation->format('Y-m-d H:i:s'))
+    //                     : $op->created_at?->format('Y-m-d H:i:s'),
+
+    //                 'reference'   => $op->reference ?? '',
+    //                 'libelle'     => $op->typeOperation?->libelle ?? 'Opération Divers',
+    //                 'devise'      => $op->devise?->symbole ?? '',
+    //                 'commentaire' => $op->commentaire ?? '',
+    //                 'debit'       => $nature == 0 ? (float) $op->montant : 0,
+    //                 'credit'      => $nature == 1 ? (float) $op->montant : 0,
+    //             ];
+    //         });
+
+    //     $soldeUSD = 0;
+    //     $soldeGNF = 0;
+
+    //     $operations = $operations->reverse()->map(function ($op) use (&$soldeUSD, &$soldeGNF) {
+    //         if ($op['devise'] === 'USD') {
+    //             $soldeUSD += $op['credit'] - $op['debit'];
+    //             $op['solde_apres'] = round($soldeUSD, 2);
+    //         } elseif ($op['devise'] === 'GNF') {
+    //             $soldeGNF += $op['credit'] - $op['debit'];
+    //             $op['solde_apres'] = round($soldeGNF, 2);
+    //         } else {
+    //             $op['solde_apres'] = null;
+    //         }
+
+    //         return $op;
+    //     })->reverse()->values();
+
+    //     return $operations->toArray();
+    // }
     public function getReleveDivers(int $id_divers): array
     {
         $operations = OperationDivers::with(['typeOperation', 'devise'])
@@ -275,7 +320,10 @@ class DiversService
 
         $soldeUSD = 0;
         $soldeGNF = 0;
+        $usdList  = [];
+        $gnfList  = [];
 
+        // ✅ Calcul du solde progressif sans casser l’ordre d’affichage
         $operations = $operations->reverse()->map(function ($op) use (&$soldeUSD, &$soldeGNF) {
             if ($op['devise'] === 'USD') {
                 $soldeUSD += $op['credit'] - $op['debit'];
@@ -290,7 +338,19 @@ class DiversService
             return $op;
         })->reverse()->values();
 
-        return $operations->toArray();
+        // ✅ Séparation en deux devises
+        foreach ($operations as $op) {
+            if ($op['devise'] === 'USD') {
+                $usdList[] = $op;
+            } elseif ($op['devise'] === 'GNF') {
+                $gnfList[] = $op;
+            }
+        }
+
+        return [
+            'usd' => $usdList,
+            'gnf' => $gnfList,
+        ];
     }
 
 }
