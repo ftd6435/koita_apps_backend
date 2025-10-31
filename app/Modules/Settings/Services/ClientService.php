@@ -508,7 +508,7 @@ class ClientService
     //         'gnf' => $gnfList,
     //     ];
     // }
-    public function getReleveClientParPeriode(int $id_client, string $date_debut, string $date_fin): array
+  public function getReleveClientParPeriode(int $id_client, string $date_debut, string $date_fin): array
 {
     // ✅ Récupération des opérations du client entre deux dates
     $operationsClient = OperationClient::with(['typeOperation', 'devise'])
@@ -518,20 +518,10 @@ class ClientService
         ->map(function ($op) {
             $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
 
-            // ✅ Si la référence est nulle → on construit une valeur par défaut
-            $reference = $op->reference ?? 'REF-' . strtoupper(uniqid());
-
-            // ✅ Si date_operation est nulle → on utilise created_at
-            $dateOperation = $op->date_operation
-                ? (is_string($op->date_operation)
-                    ? $op->date_operation
-                    : $op->date_operation->format('Y-m-d H:i:s'))
-                : $op->created_at?->format('Y-m-d H:i:s');
-
             return [
                 'date'           => $op->created_at?->format('Y-m-d H:i:s'),
-                'date_operation' => $dateOperation,
-                'reference'      => $reference,
+                'date_operation' => $op->date_operation,
+                'reference'      => $op->reference,
                 'type'           => 'operation_client',
                 'libelle'        => $op->typeOperation?->libelle ?? 'Opération client',
                 'devise'         => $op->devise?->symbole ?? '',
@@ -548,13 +538,10 @@ class ClientService
         ->map(function ($fix) {
             $calcul = app(FixingClientService::class)->calculerFacture($fix->id);
 
-            // ✅ Reference par défaut si null
-            $reference = $fix->reference ?? 'FIX-' . strtoupper(uniqid());
-
             return [
                 'date'           => $fix->created_at?->format('Y-m-d H:i:s'),
-                'date_operation' => $fix->created_at?->format('Y-m-d H:i:s'),
-                'reference'      => $reference,
+                'date_operation' => null,
+                'reference'      => $fix->reference ?? null,
                 'type'           => 'fixing',
                 'libelle'        => "Facturation du {$calcul['purete_totale']} g | Bourse: {$calcul['bourse']} | Discompte: {$calcul['discompte']}",
                 'devise'         => $fix->devise?->symbole ?? '',
@@ -563,10 +550,10 @@ class ClientService
             ];
         });
 
-    // ✅ Fusion et tri
+    // ✅ Fusion des opérations et fixings
     $data = $operationsClient
         ->concat($fixings)
-        ->sortBy('date')
+        ->sortBy('date') // plus ancien → plus récent
         ->values()
         ->toArray();
 
@@ -580,23 +567,25 @@ class ClientService
         if ($ligne['devise'] === 'USD') {
             $soldeUSD += $ligne['credit'] - $ligne['debit'];
             $ligne['solde_apres'] = round($soldeUSD, 2);
-            $usdList[]            = $ligne;
+            $usdList[] = $ligne;
         } elseif ($ligne['devise'] === 'GNF') {
             $soldeGNF += $ligne['credit'] - $ligne['debit'];
             $ligne['solde_apres'] = round($soldeGNF, 2);
-            $gnfList[]            = $ligne;
+            $gnfList[] = $ligne;
         }
     }
 
-    // ✅ Inversion (du plus récent au plus ancien)
+    // ✅ Inversion pour afficher du plus récent au plus ancien
     $usdList = array_reverse($usdList);
     $gnfList = array_reverse($gnfList);
 
+    // ✅ Retour structuré
     return [
         'usd' => $usdList,
         'gnf' => $gnfList,
     ];
 }
+
 
 
 }
