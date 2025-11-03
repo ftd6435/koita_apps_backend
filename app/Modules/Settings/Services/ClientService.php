@@ -7,6 +7,7 @@ use App\Modules\Fixing\Models\InitLivraison;
 use App\Modules\Fixing\Services\FixingClientService;
 use App\Modules\Fondation\Models\Fondation;
 use App\Modules\Settings\Models\Client;
+use App\Modules\Settings\Models\Devise;
 use App\Modules\Settings\Resources\ClientResource;
 use App\Modules\Settings\Resources\LivraisonNonFixeeResource;
 use Exception;
@@ -203,48 +204,88 @@ class ClientService
     //     ];
     // }
 
+    // public function calculerSoldeClient(int $id_client): array
+    // {
+    //     // 🔹 Fonction interne pour calculer le total par devise et par nature
+    //     $getTotalParDevise = function (string $deviseSymbole, int $nature) use ($id_client) {
+    //         return OperationClient::where('id_client', $id_client)
+    //             ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature)) // 1 = entrée, 0 = sortie
+    //             ->whereHas('devise', fn($q) => $q->where('symbole', $deviseSymbole))
+    //             ->sum('montant');
+    //     };
+
+    //     // 🔹 Totaux des opérations
+    //     $entreesUSD = $getTotalParDevise('USD', 1);
+    //     $entreesGNF = $getTotalParDevise('GNF', 1);
+
+    //     $sortiesUSD = $getTotalParDevise('USD', 0);
+    //     $sortiesGNF = $getTotalParDevise('GNF', 0);
+
+    //     // 🔹 Factures (sorties automatiques liées aux fixings)
+    //     $fixings = FixingClient::with('devise')->where('id_client', $id_client)->get();
+
+    //     foreach ($fixings as $fixing) {
+    //         $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
+    //         $montant = $calcul['total_facture'] ?? 0;
+
+    //         if ($fixing->devise?->symbole === 'USD') {
+    //             $sortiesUSD += $montant;
+    //         } elseif ($fixing->devise?->symbole === 'GNF') {
+    //             $sortiesGNF += $montant;
+    //         }
+    //     }
+
+    //     // 🔹 Solde final
+    //     return [
+    //         'solde_usd'   => round($entreesUSD - $sortiesUSD, 2),
+    //         'solde_gnf'   => round($entreesGNF - $sortiesGNF, 2),
+
+    //         // ✅ Ajout demandé : flux des opérations
+    //         'entrees_usd' => round($entreesUSD, 2),
+    //         'sorties_usd' => round($sortiesUSD, 2),
+    //         'entrees_gnf' => round($entreesGNF, 2),
+    //         'sorties_gnf' => round($sortiesGNF, 2),
+    //     ];
+    // }
+
     public function calculerSoldeClient(int $id_client): array
     {
-        // 🔹 Fonction interne pour calculer le total par devise et par nature
-        $getTotalParDevise = function (string $deviseSymbole, int $nature) use ($id_client) {
-            return OperationClient::where('id_client', $id_client)
-                ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature)) // 1 = entrée, 0 = sortie
-                ->whereHas('devise', fn($q) => $q->where('symbole', $deviseSymbole))
-                ->sum('montant');
-        };
+        // 🔹 Récupérer toutes les devises actives
+        $devises = Devise::select('id', 'symbole')->get();
 
-        // 🔹 Totaux des opérations
-        $entreesUSD = $getTotalParDevise('USD', 1);
-        $entreesGNF = $getTotalParDevise('GNF', 1);
+        $soldes = [];
 
-        $sortiesUSD = $getTotalParDevise('USD', 0);
-        $sortiesGNF = $getTotalParDevise('GNF', 0);
+        foreach ($devises as $devise) {
+            $symbole = $devise->symbole;
 
-        // 🔹 Factures (sorties automatiques liées aux fixings)
-        $fixings = FixingClient::with('devise')->where('id_client', $id_client)->get();
+            // 🔸 Total par nature (1 = entrée, 0 = sortie)
+            $getTotalParNature = function (int $nature) use ($id_client, $symbole) {
+                return OperationClient::where('id_client', $id_client)
+                    ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
+                    ->whereHas('devise', fn($q) => $q->where('symbole', $symbole))
+                    ->sum('montant');
+            };
 
-        foreach ($fixings as $fixing) {
-            $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
-            $montant = $calcul['total_facture'] ?? 0;
+            $entrees = $getTotalParNature(1);
+            $sorties = $getTotalParNature(0);
 
-            if ($fixing->devise?->symbole === 'USD') {
-                $sortiesUSD += $montant;
-            } elseif ($fixing->devise?->symbole === 'GNF') {
-                $sortiesGNF += $montant;
+            // 🔹 Ajouter les factures (fixings)
+            $fixings = FixingClient::with('devise')
+                ->where('id_client', $id_client)
+                ->whereHas('devise', fn($q) => $q->where('symbole', $symbole))
+                ->get();
+
+            foreach ($fixings as $fixing) {
+                $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
+                $montant = $calcul['total_facture'] ?? 0;
+                $sorties += $montant;
             }
+
+            // 🔹 Stocker le solde par devise
+            $soldes[$symbole] = round($entrees - $sorties, 2);
         }
 
-        // 🔹 Solde final
-        return [
-            'solde_usd'   => round($entreesUSD - $sortiesUSD, 2),
-            'solde_gnf'   => round($entreesGNF - $sortiesGNF, 2),
-
-            // ✅ Ajout demandé : flux des opérations
-            'entrees_usd' => round($entreesUSD, 2),
-            'sorties_usd' => round($sortiesUSD, 2),
-            'entrees_gnf' => round($entreesGNF, 2),
-            'sorties_gnf' => round($sortiesGNF, 2),
-        ];
+        return $soldes;
     }
 
     /**
@@ -252,35 +293,34 @@ class ClientService
      */
 
     public function getReleveClientPeriode1(int $id_client, string $date_debut, string $date_fin)
-{
-    try {
-        $client = Client::find($id_client);
+    {
+        try {
+            $client = Client::find($id_client);
 
-        if (! $client) {
+            if (! $client) {
+                return response()->json([
+                    'status'  => 404,
+                    'message' => 'Client introuvable.',
+                    'data'    => [],
+                ], 404);
+            }
+
+            $releve = $this->getReleveClientParPeriode($id_client, $date_debut, $date_fin);
+
             return response()->json([
-                'status'  => 404,
-                'message' => 'Client introuvable.',
-                'data'    => [],
-            ], 404);
+                'status'  => 200,
+                'message' => 'Relevé du client récupéré avec succès.',
+                'data'    => $releve,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 500,
+                'message' => 'Erreur lors de la récupération du relevé du client.',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
-
-        $releve = $this->getReleveClientParPeriode($id_client, $date_debut, $date_fin);
-
-        return response()->json([
-            'status'  => 200,
-            'message' => 'Relevé du client récupéré avec succès.',
-            'data'    => $releve,
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status'  => 500,
-            'message' => 'Erreur lors de la récupération du relevé du client.',
-            'error'   => $e->getMessage(),
-        ], 500);
     }
-}
-
 
     public function getReleveClient(int $id_client): array
     {
@@ -508,84 +548,82 @@ class ClientService
     //         'gnf' => $gnfList,
     //     ];
     // }
-  public function getReleveClientParPeriode(int $id_client, string $date_debut, string $date_fin): array
-{
-    // ✅ Récupération des opérations du client entre deux dates
-    $operationsClient = OperationClient::with(['typeOperation', 'devise'])
-        ->where('id_client', $id_client)
-        ->whereBetween('created_at', [$date_debut, $date_fin])
-        ->get()
-        ->map(function ($op) {
-            $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
+    public function getReleveClientParPeriode(int $id_client, string $date_debut, string $date_fin): array
+    {
+        // ✅ Récupération des opérations du client entre deux dates
+        $operationsClient = OperationClient::with(['typeOperation', 'devise'])
+            ->where('id_client', $id_client)
+            ->whereBetween('created_at', [$date_debut, $date_fin])
+            ->get()
+            ->map(function ($op) {
+                $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
 
-            return [
-                'date'           => $op->created_at?->format('Y-m-d H:i:s'),
-                'date_operation' => $op->date_operation,
-                'reference'      => $op->reference,
-                'type'           => 'operation_client',
-                'libelle'        => $op->typeOperation?->libelle ?? 'Opération client',
-                'devise'         => $op->devise?->symbole ?? '',
-                'debit'          => $nature == 0 ? (float) $op->montant : 0,
-                'credit'         => $nature == 1 ? (float) $op->montant : 0,
-            ];
-        });
+                return [
+                    'date'           => $op->created_at?->format('Y-m-d H:i:s'),
+                    'date_operation' => $op->date_operation,
+                    'reference'      => $op->reference,
+                    'type'           => 'operation_client',
+                    'libelle'        => $op->typeOperation?->libelle ?? 'Opération client',
+                    'devise'         => $op->devise?->symbole ?? '',
+                    'debit'          => $nature == 0 ? (float) $op->montant : 0,
+                    'credit'         => $nature == 1 ? (float) $op->montant : 0,
+                ];
+            });
 
-    // ✅ Récupération des fixings du client entre deux dates
-    $fixings = FixingClient::with(['devise'])
-        ->where('id_client', $id_client)
-        ->whereBetween('created_at', [$date_debut, $date_fin])
-        ->get()
-        ->map(function ($fix) {
-            $calcul = app(FixingClientService::class)->calculerFacture($fix->id);
+        // ✅ Récupération des fixings du client entre deux dates
+        $fixings = FixingClient::with(['devise'])
+            ->where('id_client', $id_client)
+            ->whereBetween('created_at', [$date_debut, $date_fin])
+            ->get()
+            ->map(function ($fix) {
+                $calcul = app(FixingClientService::class)->calculerFacture($fix->id);
 
-            return [
-                'date'           => $fix->created_at?->format('Y-m-d H:i:s'),
-                'date_operation' => null,
-                'reference'      => $fix->reference ?? null,
-                'type'           => 'fixing',
-                'libelle'        => "Facturation du {$calcul['purete_totale']} g | Bourse: {$calcul['bourse']} | Discompte: {$calcul['discompte']}",
-                'devise'         => $fix->devise?->symbole ?? '',
-                'debit'          => (float) ($calcul['total_facture'] ?? 0),
-                'credit'         => 0,
-            ];
-        });
+                return [
+                    'date'           => $fix->created_at?->format('Y-m-d H:i:s'),
+                    'date_operation' => null,
+                    'reference'      => $fix->reference ?? null,
+                    'type'           => 'fixing',
+                    'libelle'        => "Facturation du {$calcul['purete_totale']} g | Bourse: {$calcul['bourse']} | Discompte: {$calcul['discompte']}",
+                    'devise' => $fix->devise?->symbole ?? '',
+                    'debit'  => (float) ($calcul['total_facture'] ?? 0),
+                    'credit' => 0,
+                ];
+            });
 
-    // ✅ Fusion des opérations et fixings
-    $data = $operationsClient
-        ->concat($fixings)
-        ->sortBy('date') // plus ancien → plus récent
-        ->values()
-        ->toArray();
+        // ✅ Fusion des opérations et fixings
+        $data = $operationsClient
+            ->concat($fixings)
+            ->sortBy('date') // plus ancien → plus récent
+            ->values()
+            ->toArray();
 
-    // ✅ Calcul des soldes progressifs
-    $soldeUSD = 0;
-    $soldeGNF = 0;
-    $usdList  = [];
-    $gnfList  = [];
+        // ✅ Calcul des soldes progressifs
+        $soldeUSD = 0;
+        $soldeGNF = 0;
+        $usdList  = [];
+        $gnfList  = [];
 
-    foreach ($data as $ligne) {
-        if ($ligne['devise'] === 'USD') {
-            $soldeUSD += $ligne['credit'] - $ligne['debit'];
-            $ligne['solde_apres'] = round($soldeUSD, 2);
-            $usdList[] = $ligne;
-        } elseif ($ligne['devise'] === 'GNF') {
-            $soldeGNF += $ligne['credit'] - $ligne['debit'];
-            $ligne['solde_apres'] = round($soldeGNF, 2);
-            $gnfList[] = $ligne;
+        foreach ($data as $ligne) {
+            if ($ligne['devise'] === 'USD') {
+                $soldeUSD += $ligne['credit'] - $ligne['debit'];
+                $ligne['solde_apres'] = round($soldeUSD, 2);
+                $usdList[]            = $ligne;
+            } elseif ($ligne['devise'] === 'GNF') {
+                $soldeGNF += $ligne['credit'] - $ligne['debit'];
+                $ligne['solde_apres'] = round($soldeGNF, 2);
+                $gnfList[]            = $ligne;
+            }
         }
+
+        // ✅ Inversion pour afficher du plus récent au plus ancien
+        $usdList = array_reverse($usdList);
+        $gnfList = array_reverse($gnfList);
+
+        // ✅ Retour structuré
+        return [
+            'usd' => $usdList,
+            'gnf' => $gnfList,
+        ];
     }
-
-    // ✅ Inversion pour afficher du plus récent au plus ancien
-    $usdList = array_reverse($usdList);
-    $gnfList = array_reverse($gnfList);
-
-    // ✅ Retour structuré
-    return [
-        'usd' => $usdList,
-        'gnf' => $gnfList,
-    ];
-}
-
-
 
 }
