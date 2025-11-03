@@ -15,7 +15,7 @@ class StoreCompteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'devise_id' => ['required', 'exists:devises,id'],
+            'devise_id' => ['nullable', 'exists:devises,id'],
             'libelle' => ['required', 'string', 'max:100', Rule::unique('comptes')->ignore($this->route()->parameter('compte'))],
             'numero_compte' => ['required', 'string', 'max:100', Rule::unique('comptes')->ignore($this->route()->parameter('compte'))],
             'solde_initial' => ['nullable', 'numeric', 'min:0'],
@@ -26,7 +26,6 @@ class StoreCompteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'devise_id.required' => "Le devise est obligatoire",
             'devise_id.exists' => "Ce devise est invalide",
             // 🔹 Libellé
             'libelle.required' => 'Le champ libellé est obligatoire.',

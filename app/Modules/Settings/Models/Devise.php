@@ -3,6 +3,7 @@
 namespace App\Modules\Settings\Models;
 
 use App\Modules\Administration\Models\User;
+use App\Modules\Comptabilite\Models\CompteDevise;
 use App\Modules\Comptabilite\Models\FournisseurOperation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -61,5 +62,10 @@ class Devise extends Model
     public function fournisseurOperation() : HasMany
     {
         return $this->hasMany(FournisseurOperation::class)->whereNull('fournisseur_operations.deleted_at');
+    }
+
+    public function deviseComptes(): HasMany
+    {
+        return $this->hasMany(CompteDevise::class);
     }
 }

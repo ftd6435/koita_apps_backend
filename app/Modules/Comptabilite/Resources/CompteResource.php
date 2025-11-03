@@ -19,16 +19,7 @@ class CompteResource extends JsonResource
             'id' => $this->id,
             'libelle' => $this->libelle,
             'numero_compte' => $this->numero_compte,
-            'solde_initial' => $this->solde_initial,
-            // 'solde' => $this->soldeCompte($this->id, $this->solde_initial),
             'commentaire' => $this->commentaire,
-
-            'devise' => $this->devise ? [
-                'id' => $this->devise->id ?? null,
-                'libelle' => $this->devise->libelle ?? null,
-                'symbole' => $this->devise->symbole ?? null,
-                'taux_change' => $this->devise->taux_change ?? null,
-            ] : null,
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,
