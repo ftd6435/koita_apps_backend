@@ -25,6 +25,7 @@ class StoreOperationClientRequest extends FormRequest
             'id_client'         => 'required|integer|exists:clients,id',
             'id_type_operation' => 'required|integer|exists:type_operations,id',
             'id_devise'         => 'required|integer|exists:devises,id',
+            'id_compte'         => 'required|integer|exists:comptes,id', // ✅ Nouveau champ
             'montant'           => 'required|numeric|min:0',
             'taux_jour'         => 'nullable|numeric|min:0',
             'reference'         => 'nullable|string|max:100',
@@ -47,6 +48,7 @@ class StoreOperationClientRequest extends FormRequest
             'id_devise.exists'           => 'La devise sélectionnée est invalide.',
             'montant.required'           => 'Le montant est obligatoire.',
             'montant.numeric'            => 'Le montant doit être un nombre valide.',
+            'id_compte.exists'           => 'Le compte sélectionné est invalide.', // ✅ Nouveau message
 
             'reference.string'           => 'La référence doit être une chaîne de caractères.',
             'reference.max'              => 'La référence ne peut pas dépasser 100 caractères.',

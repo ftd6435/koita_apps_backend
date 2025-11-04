@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Modules\Comptabilite\Models;
 
+use App\Modules\Administration\Models\User;
+use App\Modules\Comptabilite\Models\TypeOperation;
+use App\Modules\Settings\Models\Devise;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Modules\Settings\Models\Devise;
-use App\Modules\Comptabilite\Models\TypeOperation;
-use App\Modules\Administration\Models\User;
 
 class Caisse extends Model
 {
@@ -18,6 +17,7 @@ class Caisse extends Model
         'id_type_operation',
         'id_devise',
         'montant',
+        'id_compte',
         'commentaire',
         'taux_jour',
         'reference',
@@ -26,8 +26,7 @@ class Caisse extends Model
         'updated_by',
     ];
 
-
-     protected $casts = [
+    protected $casts = [
         'date_operation' => 'datetime',
     ];
     // 🔹 Relations
@@ -49,5 +48,9 @@ class Caisse extends Model
     public function modificateur()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+    public function compte()
+    {
+        return $this->belongsTo(Compte::class, 'id_compte');
     }
 }

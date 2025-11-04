@@ -1,11 +1,11 @@
 <?php
-
 namespace App\Modules\Comptabilite\Services;
 
 use App\Modules\Comptabilite\Models\OperationClient;
+use App\Modules\Comptabilite\Models\TypeOperation;
 use App\Modules\Comptabilite\Resources\OperationClientResource;
-use Illuminate\Support\Facades\Auth;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class OperationClientService
 {
@@ -16,6 +16,33 @@ class OperationClientService
     {
         try {
             $data['created_by'] = Auth::id();
+
+            // ✅ Vérifie la présence d’un compte et d’une devise
+
+            // Récupère le type d’opération pour savoir si c’est une sortie (nature = 0)
+            $typeOperation = TypeOperation::find($data['id_type_operation']);
+
+            if ($typeOperation && $typeOperation->nature == 0) {
+                // ✅ Vérifie le solde avant d’autoriser l’opération
+                $verification = CompteService::verifierSoldeAvantOperation(
+                    $data['id_compte'],
+                    $data['id_devise'],
+                    $data['montant']
+                );
+
+                if ($verification['status'] === false) {
+                    return response()->json([
+                        'status'  => 422,
+                        'message' => $verification['message'],
+                        'data'    => [
+                            'solde_disponible' => $verification['solde'],
+                            'montant_demande'  => $data['montant'],
+                        ],
+                    ], 422);
+                }
+            }
+
+            // ✅ Si tout est bon → on enregistre l’opération
             $operation = OperationClient::create($data);
 
             return response()->json([
@@ -25,7 +52,8 @@ class OperationClientService
                     $operation->load(['client', 'typeOperation', 'devise', 'createur'])
                 ),
             ]);
-        } catch (Exception $e) {
+
+        } catch (\Exception $e) {
             return response()->json([
                 'status'  => 500,
                 'message' => 'Erreur lors de l’enregistrement de l’opération client.',
@@ -40,7 +68,7 @@ class OperationClientService
     public function update(int $id, array $data)
     {
         try {
-            $operation = OperationClient::findOrFail($id);
+            $operation          = OperationClient::findOrFail($id);
             $data['updated_by'] = Auth::id();
             $operation->update($data);
 

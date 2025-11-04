@@ -19,6 +19,7 @@ class OperationClient extends Model
         'id_client',
         'reference',
         'date_operation',
+        'id_compte',
         'id_type_operation',
         'id_devise',
         'montant',
@@ -73,5 +74,10 @@ class OperationClient extends Model
     public function modificateur()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+     public function compte()
+    {
+        return $this->belongsTo(Compte::class, 'id_compte');
     }
 }

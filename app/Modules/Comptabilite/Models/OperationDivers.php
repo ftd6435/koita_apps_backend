@@ -20,6 +20,7 @@ class OperationDivers extends Model
         'id_type_operation',
         'id_divers',
         'id_devise',
+        'id_compte',
         'montant',
         'commentaire',
         'reference',
@@ -75,4 +76,9 @@ class OperationDivers extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+    public function compte()
+    {
+        return $this->belongsTo(Compte::class, 'id_compte');
+    }
+
 }

@@ -1,11 +1,11 @@
 <?php
-
 namespace App\Modules\Comptabilite\Services;
 
 use App\Modules\Comptabilite\Models\OperationDivers;
+use App\Modules\Comptabilite\Models\TypeOperation;
 use App\Modules\Comptabilite\Resources\OperationDiversResource;
-use Illuminate\Support\Facades\Auth;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class OperationDiversService
 {
@@ -16,6 +16,31 @@ class OperationDiversService
     {
         try {
             $data['created_by'] = Auth::id();
+
+            // ✅ Vérifie si l’opération est une sortie (nature = 0)
+            $typeOperation = TypeOperation::find($data['id_type_operation']);
+
+            if ($typeOperation && $typeOperation->nature == 0) {
+                // ✅ Vérification du solde du compte avant enregistrement
+                $verification = CompteService::verifierSoldeAvantOperation(
+                    $data['id_compte'],
+                    $data['id_devise'],
+                    $data['montant']
+                );
+
+                if ($verification['status'] === false) {
+                    return response()->json([
+                        'status'  => 422,
+                        'message' => $verification['message'],
+                        'data'    => [
+                            'solde_disponible' => $verification['solde'],
+                            'montant_demande'  => $data['montant'],
+                        ],
+                    ], 422);
+                }
+            }
+
+            // ✅ Enregistrement de l’opération après validation
             $operation = OperationDivers::create($data);
 
             return response()->json([
@@ -25,7 +50,7 @@ class OperationDiversService
                     $operation->load(['divers', 'typeOperation', 'devise', 'createur'])
                 ),
             ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status'  => 500,
                 'message' => 'Erreur lors de l’enregistrement de l’opération divers.',
@@ -37,10 +62,11 @@ class OperationDiversService
     /**
      * 🔹 Mettre à jour une opération divers
      */
+
     public function update(int $id, array $data)
     {
         try {
-            $operation = OperationDivers::findOrFail($id);
+            $operation          = OperationDivers::findOrFail($id);
             $data['updated_by'] = Auth::id();
             $operation->update($data);
 
@@ -63,6 +89,7 @@ class OperationDiversService
     /**
      * 🔹 Supprimer une opération divers
      */
+    
     public function delete(int $id)
     {
         try {

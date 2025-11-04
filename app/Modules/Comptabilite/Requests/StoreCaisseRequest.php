@@ -19,6 +19,7 @@ class StoreCaisseRequest extends FormRequest
             'id_type_operation' => 'required|integer|exists:type_operations,id',
             'id_devise'         => 'required|integer|exists:devises,id',
             'montant'           => 'required|numeric|min:0',
+            'id_compte'         => 'required|integer|exists:comptes,id', 
             'taux_jour'         => 'nullable|numeric|min:0',
             'commentaire'       => 'nullable|string|max:255',
             'reference'         => 'nullable|string|max:100',
