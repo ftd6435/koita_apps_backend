@@ -9,7 +9,7 @@ use App\Modules\Comptabilite\Resources\CompteResource;
 use App\Traits\ApiResponses;
 use Illuminate\Support\Facades\Auth;
 
-class CompteDeviseController extends Controller
+class CompteController extends Controller
 {
     use ApiResponses;
 
