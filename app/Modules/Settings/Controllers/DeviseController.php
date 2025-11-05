@@ -61,22 +61,22 @@ class DeviseController extends Controller
         $from = 'USD';
         $to   = 'GNF';
 
-       // $taux = DeviseService::getTauxJour($from, $to);
+       $taux = DeviseService::getTauxJour($from, $to);
 
-        // if ($taux === null) {
-        //     return response()->json([
-        //         'status'  => 404,
-        //         'message' => "Impossible d’obtenir le taux entre {$from} et {$to}",
-        //     ], 404);
-        // }
+        if ($taux === null) {
+            return response()->json([
+                'status'  => 404,
+                'message' => "Impossible d’obtenir le taux entre {$from} et {$to}",
+            ], 404);
+        }
 
         return response()->json([
             'status'  => 200,
             'message' => "Taux récupéré avec succès",
             'data'    => [
-                // 'from' => $from,
-                // 'to'   => $to,
-                // 'taux' => $taux,
+                'from' => $from,
+                'to'   => $to,
+                'taux' => $taux,
             ],
         ]);
     }
