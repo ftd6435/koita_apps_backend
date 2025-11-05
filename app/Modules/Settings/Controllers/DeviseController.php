@@ -58,8 +58,8 @@ class DeviseController extends Controller
 
     public function testTaux()
     {
-        $from = 'USD';
-        $to   = 'GNF';
+        $from = 'GNF';
+        $to   = 'USD';
 
        $taux = DeviseService::getTauxJour($from, $to);
 
