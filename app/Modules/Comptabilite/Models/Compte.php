@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Compte extends Model
 {
-    protected $table = 'compte_devises';
-
     protected $fillable = [
         'banque_id',
         'devise_id',
