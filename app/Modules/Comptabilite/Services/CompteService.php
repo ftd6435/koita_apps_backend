@@ -20,7 +20,7 @@ class CompteService
         }
 
         $getTotal = function ($model, int $nature) use ($id_compte, $id_devise) {
-            return $model::where('compte_id', $id_compte)
+            return $model::where('id_compte', $id_compte)
                 ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
                 ->where('id_devise', $id_devise)
                 ->sum('montant');
