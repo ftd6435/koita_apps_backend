@@ -3,26 +3,31 @@
 namespace App\Modules\Comptabilite\Models;
 
 use App\Modules\Administration\Models\User;
+use App\Modules\Settings\Models\Devise;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Compte extends Model
 {
-    use SoftDeletes;
+    protected $table = 'compte_devises';
 
     protected $fillable = [
-        'libelle',
+        'banque_id',
+        'devise_id',
+        'solde_initial',
         'numero_compte',
-        'commentaire',
         'created_by',
         'updated_by'
     ];
 
-    public function fournisseurOperations() : HasMany
+    public function banque(): BelongsTo
     {
-        return $this->hasMany(FournisseurOperation::class)->whereNull('fournisseur_operations.deleted_at');
+        return $this->belongsTo(Banque::class);
+    }
+
+    public function devise(): BelongsTo
+    {
+        return $this->belongsTo(Devise::class);
     }
 
     public function createdBy() : BelongsTo
@@ -33,10 +38,5 @@ class Compte extends Model
     public function updatedBy() : BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function compteDevises(): HasMany
-    {
-        return $this->hasMany(CompteDevise::class);
     }
 }

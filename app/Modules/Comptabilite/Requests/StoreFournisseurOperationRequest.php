@@ -18,6 +18,7 @@ class StoreFournisseurOperationRequest extends FormRequest
             'fournisseur_id' => ['required', 'exists:fournisseurs,id'],
             'type_operation_id' => ['required', 'exists:type_operations,id'],
             'devise_id' => ['required', 'exists:devises,id'],
+            'compte_id' => ['required', 'exists:comptes,id'],
             'taux' => ['nullable', 'numeric', 'min:0'],
             'montant' => ['nullable', 'numeric', 'min:0'],
             'date_operation' => ['nullable', 'date'],
@@ -43,6 +44,9 @@ class StoreFournisseurOperationRequest extends FormRequest
 
             'devise_id.required' => 'Le devise est obligatoire.',
             'devise_id.exists' => 'Le devise sélectionné est invalide.',
+
+            'compte_id.required' => 'Le compte est obligatoire.',
+            'compte_id.exists' => 'Le compte sélectionné est invalide.',
 
             'taux.numeric' => 'Le taux doit être un nombre.',
             'taux.min' => 'Le taux doit être supérieur ou égal à 0.',

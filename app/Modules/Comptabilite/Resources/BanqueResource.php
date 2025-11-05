@@ -6,24 +6,22 @@ use App\Traits\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CompteResource extends JsonResource
+class BanqueResource extends JsonResource
 {
     use Helper;
 
-    public function toArray(Request $request)
+    /**
+     * Transform the resource into an array.
+     */
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'solde_initial' => $this->solde_initial,
-            'numero_compte' => $this->numero_compte,
-            // 'solde' => $this->getAccountBalanceByDevise($this->compte->id, $this->devise->id),
+            'libelle' => $this->libelle,
+            'api' => $this->api ?? null,
+            'commentaire' => $this->commentaire ?? null,
 
-            'devise' => [
-                'id' => $this->devise->id,
-                'libelle' => $this->devise->libelle,
-                'symbole' => $this->devise->symbole,
-            ],
-
+            // 'soldes' => $this->getAccountBalance($this->id),
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,
@@ -43,8 +41,8 @@ class CompteResource extends JsonResource
                 'role' => $this->updatedBy->role,
             ] : null,
 
-            'created_at'  => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at'  => $this->updated_at?->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

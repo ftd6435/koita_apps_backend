@@ -3,7 +3,10 @@
 namespace App\Traits;
 
 use App\Modules\Administration\Models\Fournisseur;
+use App\Modules\Comptabilite\Models\Caisse;
 use App\Modules\Comptabilite\Models\FournisseurOperation;
+use App\Modules\Comptabilite\Models\OperationClient;
+use App\Modules\Comptabilite\Models\OperationDivers;
 use App\Modules\Fixing\Models\Fixing;
 use App\Modules\Fixing\Models\FixingBarre;
 use App\Modules\Fondation\Models\Fondation;
@@ -478,6 +481,192 @@ trait Helper
 
         return $carrat_moyen_non_fixer;
     }
+
+    /**
+     * Cette methode retourne tous les solde d'un compte dans les differents devise
+     */
+    // public function getAccountBalance($compteId)
+    // {
+    //     // FournisseurOperation
+    //     $fournisseurTotals = FournisseurOperation::with(['devise:id,symbole', 'typeOperation:id,nature'])
+    //         ->where('compte_id', $compteId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->devise && $operation->typeOperation;
+    //         })
+    //         ->groupBy('devise.symbole')
+    //         ->map(function ($group) {
+    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
+    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
+    //             return $deposits - $withdrawals;
+    //         });
+
+    //     // OperationClient
+    //     $clientTotals = OperationClient::with(['devise:id,symbole', 'typeOperation:id,nature'])
+    //         ->where('id_compte', $compteId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->devise && $operation->typeOperation;
+    //         })
+    //         ->groupBy('devise.symbole')
+    //         ->map(function ($group) {
+    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
+    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
+    //             return $deposits - $withdrawals;
+    //         });
+
+    //     // OperationDivers
+    //     $diversTotals = OperationDivers::with(['devise:id,symbole', 'typeOperation:id,nature'])
+    //         ->where('id_compte', $compteId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->devise && $operation->typeOperation;
+    //         })
+    //         ->groupBy('devise.symbole')
+    //         ->map(function ($group) {
+    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
+    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
+    //             return $deposits - $withdrawals;
+    //         });
+
+    //     // CaisseOperation
+    //     $caisseTotals = Caisse::with(['devise:id,symbole', 'typeOperation:id,nature'])
+    //         ->where('id_compte', $compteId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->devise && $operation->typeOperation;
+    //         })
+    //         ->groupBy('devise.symbole')
+    //         ->map(function ($group) {
+    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
+    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
+    //             return $deposits - $withdrawals;
+    //         });
+
+    //     // Get initial balances from CompteDevise pivot table
+    //     $initialBalances = CompteDevise::where('compte_id', $compteId)
+    //         ->with('devise:id,symbole')
+    //         ->get()
+    //         ->filter(function ($compteDevise) {
+    //             return $compteDevise->devise;
+    //         })
+    //         ->mapWithKeys(function ($compteDevise) {
+    //             return [$compteDevise->devise->symbole => $compteDevise->solde_initial ?? 0];
+    //         });
+
+    //     // Merge all totals by currency
+    //     $allCurrencies = collect([])
+    //         ->merge($fournisseurTotals)
+    //         ->merge($clientTotals)
+    //         ->merge($diversTotals)
+    //         ->merge($caisseTotals);
+
+    //     // Combine with initial balances
+    //     $combinedBalances = $initialBalances->map(function ($soldeInitial, $symbole) use ($allCurrencies) {
+    //         $operationsTotal = $allCurrencies->get($symbole, 0);
+    //         return $soldeInitial + $operationsTotal;
+    //     });
+
+    //     // Add any currencies from operations that don't have initial balances
+    //     foreach ($allCurrencies as $symbole => $total) {
+    //         if (!$combinedBalances->has($symbole)) {
+    //             $combinedBalances->put($symbole, $total);
+    //         }
+    //     }
+
+    //     // Handle empty results
+    //     if ($combinedBalances->isEmpty()) {
+    //         return [];
+    //     }
+
+    //     // Format as array
+    //     $balances = $combinedBalances->map(function ($solde, $symbole) {
+    //         return [
+    //             'symbole' => $symbole,
+    //             'solde' => round($solde, 2)
+    //         ];
+    //     })->values();
+
+    //     return $balances->toArray();
+    // }
+
+    /**
+     * Cette methode retourne un seul solde dans une devise d'un compte donné
+     */
+    // public function getAccountBalanceByDevise($compteId, $deviseId)
+    // {
+    //     // FournisseurOperation
+    //     $fournisseurTotal = FournisseurOperation::with(['typeOperation:id,nature'])
+    //         ->where('compte_id', $compteId)
+    //         ->where('devise_id', $deviseId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->typeOperation;
+    //         })
+    //         ->reduce(function ($carry, $operation) {
+    //             if ($operation->typeOperation->nature == 1) {
+    //                 return $carry + $operation->montant; // Deposit
+    //             } else {
+    //                 return $carry - $operation->montant; // Withdrawal
+    //             }
+    //         }, 0) ?? 0;
+
+    //     // OperationClient
+    //     $clientTotal = OperationClient::with(['typeOperation:id,nature'])
+    //         ->where('id_compte', $compteId)
+    //         ->where('id_devise', $deviseId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->typeOperation;
+    //         })
+    //         ->reduce(function ($carry, $operation) {
+    //             if ($operation->typeOperation->nature == 1) {
+    //                 return $carry + $operation->montant;
+    //             } else {
+    //                 return $carry - $operation->montant;
+    //             }
+    //         }, 0) ?? 0;
+
+    //     // OperationDivers
+    //     $diversTotal = OperationDivers::with(['typeOperation:id,nature'])
+    //         ->where('id_compte', $compteId)
+    //         ->where('id_devise', $deviseId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->typeOperation;
+    //         })
+    //         ->reduce(function ($carry, $operation) {
+    //             if ($operation->typeOperation->nature == 1) {
+    //                 return $carry + $operation->montant;
+    //             } else {
+    //                 return $carry - $operation->montant;
+    //             }
+    //         }, 0) ?? 0;
+
+    //     // CaisseOperation
+    //     $caisseTotal = Caisse::with(['typeOperation:id,nature'])
+    //         ->where('id_compte', $compteId)
+    //         ->where('id_devise', $deviseId)
+    //         ->get()
+    //         ->filter(function ($operation) {
+    //             return $operation->typeOperation;
+    //         })
+    //         ->reduce(function ($carry, $operation) {
+    //             if ($operation->typeOperation->nature == 1) {
+    //                 return $carry + $operation->montant;
+    //             } else {
+    //                 return $carry - $operation->montant;
+    //             }
+    //         }, 0) ?? 0;
+
+    //     // Solde initial
+    //     $solde_initial = CompteDevise::where('compte_id', $compteId)->where('devise_id', $deviseId)->value('solde_initial') ?? 0;
+        
+    //     // Sum all totals
+    //     $totalBalance = $fournisseurTotal + $clientTotal + $diversTotal + $caisseTotal + $solde_initial;
+
+    //     return round($totalBalance, 2);
+    // }
 
     public function arroundir(int $precision, float $valeur): float
     {

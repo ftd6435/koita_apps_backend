@@ -7,6 +7,7 @@ use App\Modules\Comptabilite\Controllers\OperationClientController;
 use App\Modules\Comptabilite\Controllers\OperationDiversController;
 use Illuminate\Support\Facades\Route;
 use App\Modules\Comptabilite\Controllers\TypeOperationController;
+use App\Modules\Comptabilite\Models\CompteDevise;
 
 Route::middleware('auth:sanctum')->prefix('v1/comptabilite')->group(function () {
     Route::apiResource('type-operations', TypeOperationController::class);
@@ -23,4 +24,8 @@ Route::middleware('auth:sanctum')->prefix('v1/comptabilite')->group(function () 
     Route::get('fournisseur-operations/restore/{id}', [FournisseurOperationController::class, 'restore']);
     Route::delete('fournisseur-operations/delete/{id}', [FournisseurOperationController::class, 'forceDelete']);
     Route::apiResource('fournisseur-operations', FournisseurOperationController::class);
+
+    // Routes de liaison de compte a devise
+    Route::get('compte-devise/comptes/{id}', [CompteDevise::class, 'comptes']);
+    Route::apiResource('compte-devise', CompteDevise::class);
 });

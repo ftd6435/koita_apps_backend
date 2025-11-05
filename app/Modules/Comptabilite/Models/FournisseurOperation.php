@@ -19,6 +19,7 @@ class FournisseurOperation extends Model
         'fournisseur_id',
         'type_operation_id',
         'devise_id',
+        'compte_id',
         'taux',
         'montant',
         'commentaire',
@@ -39,6 +40,11 @@ class FournisseurOperation extends Model
     public function devise(): BelongsTo
     {
         return $this->belongsTo(Devise::class)->whereNull('devises.deleted_at');
+    }
+
+    public function compte(): BelongsTo
+    {
+        return $this->belongsTo(Compte::class);
     }
 
     public function createdBy(): BelongsTo
