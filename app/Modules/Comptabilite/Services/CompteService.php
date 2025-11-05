@@ -14,16 +14,29 @@ class CompteService
      */
     public static function calculerSoldeParDevise(int $id_compte, int $id_devise): float
     {
-        $symbole = Devise::find($id_devise)?->symbole;
-        if (! $symbole) {
+        $symboleCompte = Devise::find($id_devise)?->symbole;
+
+        if (! $symboleCompte) {
             return 0.0;
         }
 
-        $getTotal = function ($model, int $nature) use ($id_compte, $id_devise) {
-            return $model::where('id_compte', $id_compte)
+        $convertMontant = function ($operation, $id_deviseCompte) {
+            // ✅ Si la devise de l’opération est différente, on convertit avec le taux du jour
+            if ($operation->id_devise != $id_deviseCompte) {
+                // Exemple : montant * taux_jour pour ramener dans la devise du compte
+                return $operation->montant * ($operation->taux_jour ?? 1);
+            }
+
+            // ✅ Même devise, pas de conversion
+            return $operation->montant;
+        };
+
+        $getTotal = function ($model, int $nature) use ($id_compte, $id_devise, $convertMontant) {
+            $operations = $model::where('id_compte', $id_compte)
                 ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
-                ->where('id_devise', $id_devise)
-                ->sum('montant');
+                ->get();
+
+            return $operations->sum(fn($op) => $convertMontant($op, $id_devise));
         };
 
         // ✅ Somme des opérations pour client, divers et caisse
@@ -37,17 +50,19 @@ class CompteService
             $getTotal(OperationDivers::class, 0) +
             $getTotal(Caisse::class, 0);
 
-        // ✅ Fournisseur à part (nommage différent)
-        $entreesF = FournisseurOperation::where('compte_id', $id_compte)
-            ->whereHas('typeOperation', fn($q) => $q->where('nature', 1))
-            ->where('devise_id', $id_devise)
-            ->sum('montant');
+        // ✅ Fournisseur à part (structure légèrement différente)
+        $getTotalFournisseur = function (int $nature) use ($id_compte, $id_devise, $convertMontant) {
+            $operations = FournisseurOperation::where('compte_id', $id_compte)
+                ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
+                ->get();
 
-        $sortiesF = FournisseurOperation::where('compte_id', $id_compte)
-            ->whereHas('typeOperation', fn($q) => $q->where('nature', 0))
-            ->where('devise_id', $id_devise)
-            ->sum('montant');
+            return $operations->sum(fn($op) => $convertMontant($op, $id_devise));
+        };
 
+        $entreesF = $getTotalFournisseur(1);
+        $sortiesF = $getTotalFournisseur(0);
+
+        // ✅ Solde final dans la devise du compte
         $solde = ($entrees + $entreesF) - ($sorties + $sortiesF);
 
         return round($solde, 2);

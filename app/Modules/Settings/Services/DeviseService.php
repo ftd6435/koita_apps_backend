@@ -4,7 +4,10 @@ namespace App\Modules\Settings\Services;
 use App\Modules\Settings\Resources\DeviseResource;
 use App\Modules\Settings\Models\Devise;
 use Exception;
+
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DeviseService
 {
@@ -77,6 +80,8 @@ class DeviseService
         }
     }
 
+
+
     /**
      * 🔹 Récupérer toutes les devises
      */
@@ -122,4 +127,29 @@ class DeviseService
             ], 404);
         }
     }
+
+    public static function getTauxJour(string $from, string $to): ?float
+    {
+        try {
+            $response = Http::get("https://api.exchangerate-api.com/v4/latest/{$from}");
+
+            if ($response->failed()) {
+                Log::error("Erreur API taux de change : {$response->status()}");
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (! isset($data['rates'][$to])) {
+                Log::warning("Taux introuvable pour la devise cible : {$to}");
+                return null;
+            }
+
+            return (float) $data['rates'][$to];
+        } catch (\Exception $e) {
+            Log::error("Erreur récupération taux de change : " . $e->getMessage());
+            return null;
+        }
+    }
+    
 }
