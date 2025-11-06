@@ -238,19 +238,24 @@ class ClientService
                 $sorties += $montant;
             }
 
-            // 🔹 Calcul du solde final pour la devise
+            // 🔹 Calcul du solde final
             $solde = $entrees - $sorties;
 
-            // 🔹 Enregistrement
-            $flux[$symbole] = [
+            // 🔹 Enregistrement du flux
+            $flux[] = [
+                'devise'  => $symbole,
                 'entrees' => round($entrees, 2),
                 'sorties' => round($sorties, 2),
             ];
 
-            $soldes[$symbole] = round($solde, 2);
+            // 🔹 Enregistrement du solde (format attendu par le front)
+            $soldes[] = [
+                'devise'  => $symbole,
+                'montant' => round($solde, 2),
+            ];
         }
 
-        // 🔹 Structure finale uniforme avec calculerSoldeDivers
+        // 🔹 Structure finale uniforme
         return [
             'soldes' => $soldes,
             'flux'   => $flux,
