@@ -8,6 +8,7 @@ use App\Modules\Administration\Models\User;
 use App\Modules\Administration\Requests\StoreUserRequest;
 use App\Modules\Administration\Requests\UpdatePasswordRequest;
 use App\Modules\Administration\Resources\UserResource;
+use App\Modules\Comptabilite\Models\Caisse;
 use App\Modules\Comptabilite\Models\FournisseurOperation;
 use App\Modules\Comptabilite\Models\OperationClient;
 use App\Modules\Comptabilite\Models\OperationDivers;
@@ -116,7 +117,7 @@ class UserController extends Controller
         $today = now()->toDateString(); // Today's date (e.g. 2025-10-27)
 
         // 🟦 Fournisseur operations
-        $fournisseurOps = FournisseurOperation::with(['fournisseur', 'typeOperation', 'devise'])
+        $fournisseurOps = FournisseurOperation::with(['fournisseur', 'typeOperation', 'devise', 'compte'])
             ->whereDate('date_operation', $today)
             ->get()
             ->map(function ($op) {
@@ -125,6 +126,8 @@ class UserController extends Controller
                     'date_operation' => $op->date_operation,
                     'montant' => $op->montant,
                     'devise' => $op->devise->symbole ?? null,
+                    'banque' => $op->compte->banque->libelle,
+                    'numero_compte' => $op->compte->numero_compte,
                     'type_operation' => $op->typeOperation->libelle ?? null,
                     'nature' => $op->typeOperation->nature ?? null,
                     'fullname' => $op->fournisseur->name,
@@ -134,7 +137,7 @@ class UserController extends Controller
             });
 
         // 🟩 Client operations
-        $clientOps = OperationClient::with(['client', 'typeOperation', 'devise'])
+        $clientOps = OperationClient::with(['client', 'typeOperation', 'devise', 'compte'])
             ->whereDate('date_operation', $today)
             ->get()
             ->map(function ($op) {
@@ -143,6 +146,8 @@ class UserController extends Controller
                     'date_operation' => $op->date_operation,
                     'montant' => $op->montant,
                     'devise' => $op->devise->symbole ?? null,
+                    'banque' => $op->compte->banque->libelle,
+                    'numero_compte' => $op->compte->numero_compte,
                     'type_operation' => $op->typeOperation->libelle ?? null,
                     'nature' => $op->typeOperation->nature ?? null,
                     'fullname' => $op->client->nom_complet ?? null,
@@ -152,7 +157,7 @@ class UserController extends Controller
             });
 
         // 🟨 Divers operations
-        $diversOps = OperationDivers::with(['divers', 'typeOperation', 'devise'])
+        $diversOps = OperationDivers::with(['divers', 'typeOperation', 'devise', 'compte'])
             ->whereDate('date_operation', $today)
             ->get()
             ->map(function ($op) {
@@ -161,6 +166,8 @@ class UserController extends Controller
                     'date_operation' => $op->date_operation,
                     'montant' => $op->montant,
                     'devise' => $op->devise->symbole ?? null,
+                    'banque' => $op->compte->banque->libelle,
+                    'numero_compte' => $op->compte->numero_compte,
                     'type_operation' => $op->typeOperation->libelle ?? null,
                     'nature' => $op->typeOperation->nature ?? null,
                     'fullname' => $op->divers->name ?? null,
@@ -169,10 +176,31 @@ class UserController extends Controller
                 ];
             });
 
+        // Operation de la caisse
+        $caisseOps = Caisse::with(['typeOperation', 'devise', 'compte'])
+            ->whereDate('date_operation', $today)
+            ->get()
+            ->map(function ($op) {
+                return [
+                    'reference' => $op->reference,
+                    'date_operation' => $op->date_operation,
+                    'montant' => $op->montant,
+                    'devise' => $op->devise->symbole ?? null,
+                    'banque' => $op->compte->banque->libelle,
+                    'numero_compte' => $op->compte->numero_compte,
+                    'type_operation' => $op->typeOperation->libelle ?? null,
+                    'nature' => $op->typeOperation->nature ?? null,
+                    'fullname' => "",
+                    'type' => 'Caisse',
+                    'commentaire' => $op->commentaire ?? null,
+                ];
+            });
+
         // 🔹 Combine all 3 collections into one
         $dailyOperations = $fournisseurOps
             ->concat($clientOps)
             ->concat($diversOps)
+            ->concat($caisseOps)
             ->sortByDesc('date_operation')
             ->values();
 

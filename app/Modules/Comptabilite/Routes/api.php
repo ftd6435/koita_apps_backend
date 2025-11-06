@@ -27,4 +27,6 @@ Route::middleware('auth:sanctum')->prefix('v1/comptabilite')->group(function () 
 
     // Routes de liaison de compte a devise
     Route::apiResource('comptes', CompteController::class);
+
+    Route::get('operations/historique', [BanqueController::class, 'operations']);
 });

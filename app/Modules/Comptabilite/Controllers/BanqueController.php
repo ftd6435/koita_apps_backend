@@ -7,11 +7,12 @@ use App\Modules\Comptabilite\Models\Banque;
 use App\Modules\Comptabilite\Requests\StoreBanqueRequest;
 use App\Modules\Comptabilite\Resources\BanqueResource;
 use App\Traits\ApiResponses;
+use App\Traits\CalculOperations;
 use Illuminate\Support\Facades\Auth;
 
 class BanqueController extends Controller
 {
-    use ApiResponses;
+    use ApiResponses, CalculOperations;
 
     public function index()
     {
@@ -39,6 +40,13 @@ class BanqueController extends Controller
         $banque = Banque::create($fields);
 
         return $this->successResponse($banque, "Nouvelle banque ajouté avec succès.");
+    }
+
+    public function operations()
+    {
+        $operations = $this->operationsHistorique();
+
+        return $this->successResponse($operations, "Historique des opérations par devise bien chargé.");
     }
 
     public function update(StoreBanqueRequest $request, string $id)

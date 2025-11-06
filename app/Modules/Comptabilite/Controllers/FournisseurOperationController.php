@@ -5,14 +5,16 @@ namespace App\Modules\Comptabilite\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Comptabilite\Models\Compte;
 use App\Modules\Comptabilite\Models\FournisseurOperation;
+use App\Modules\Comptabilite\Models\TypeOperation;
 use App\Modules\Comptabilite\Requests\StoreFournisseurOperationRequest;
 use App\Modules\Comptabilite\Resources\FournisseurOperationResource;
 use App\Traits\ApiResponses;
+use App\Traits\Helper;
 use Illuminate\Support\Facades\Auth;
 
 class FournisseurOperationController extends Controller
 {
-    use ApiResponses;
+    use ApiResponses, Helper;
 
     public function index()
     {
@@ -45,6 +47,13 @@ class FournisseurOperationController extends Controller
 
         if($compte && $compte->devise_id != $fields['devise_id']){
             return $this->errorResponse("Veuillez choisir une devise qui correspond au compte.");
+        }
+
+        $nature = TypeOperation::where('id', $fields['type_operation_id'])->value('nature');
+        $solde = $this->getAccountBalanceByDevise($fields['compte_id']) - $fields['montant'];
+
+        if($nature == 0 && $solde < 0){
+            return $this->errorResponse("Votre solde est insuffisant.");
         }
 
         $fournisseur_operation = FournisseurOperation::create($fields);
