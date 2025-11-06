@@ -2,6 +2,7 @@
 namespace App\Modules\Comptabilite\Services;
 
 use App\Modules\Comptabilite\Models\Caisse;
+use App\Modules\Comptabilite\Models\Compte;
 use App\Modules\Comptabilite\Models\FournisseurOperation;
 use App\Modules\Comptabilite\Models\OperationClient;
 use App\Modules\Comptabilite\Models\OperationDivers;
@@ -12,34 +13,26 @@ class CompteService
     /**
      * 🔹 Calcule le solde d’un compte dans une devise donnée
      */
-    public static function calculerSoldeParDevise(int $id_compte, int $id_devise): float
+    public static function calculerSolde(int $id_compte): float
     {
-        $symboleCompte = Devise::find($id_devise)?->symbole;
+        $compte = Compte::with('devise')->find($id_compte);
 
-        if (! $symboleCompte) {
+        // 🔸 Vérifie que le compte existe et a une devise
+        if (! $compte || ! $compte->devise) {
             return 0.0;
         }
 
-        $convertMontant = function ($operation, $id_deviseCompte) {
-            // ✅ Si la devise de l’opération est différente, on convertit avec le taux du jour
-            if ($operation->id_devise != $id_deviseCompte) {
-                // Exemple : montant * taux_jour pour ramener dans la devise du compte
-                return $operation->montant * ($operation->taux_jour ?? 1);
-            }
+        $id_deviseCompte = $compte->devise_id;
 
-            // ✅ Même devise, pas de conversion
-            return $operation->montant;
-        };
-
-        $getTotal = function ($model, int $nature) use ($id_compte, $id_devise, $convertMontant) {
-            $operations = $model::where('id_compte', $id_compte)
+        // 🔹 Fonction pour récupérer le total des montants dans la devise du compte
+        $getTotal = function ($model, int $nature) use ($id_compte, $id_deviseCompte) {
+            return $model::where('id_compte', $id_compte)
+                ->where('id_devise', $id_deviseCompte)
                 ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
-                ->get();
-
-            return $operations->sum(fn($op) => $convertMontant($op, $id_devise));
+                ->sum('montant');
         };
 
-        // ✅ Somme des opérations pour client, divers et caisse
+        // ✅ Somme des opérations
         $entrees =
             $getTotal(OperationClient::class, 1) +
             $getTotal(OperationDivers::class, 1) +
@@ -50,13 +43,12 @@ class CompteService
             $getTotal(OperationDivers::class, 0) +
             $getTotal(Caisse::class, 0);
 
-        // ✅ Fournisseur à part (structure légèrement différente)
-        $getTotalFournisseur = function (int $nature) use ($id_compte, $id_devise, $convertMontant) {
-            $operations = FournisseurOperation::where('compte_id', $id_compte)
+        // 🔹 Fournisseur à part
+        $getTotalFournisseur = function (int $nature) use ($id_compte, $id_deviseCompte) {
+            return FournisseurOperation::where('compte_id', $id_compte)
+                ->where('devise_id', $id_deviseCompte)
                 ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
-                ->get();
-
-            return $operations->sum(fn($op) => $convertMontant($op, $id_devise));
+                ->sum('montant');
         };
 
         $entreesF = $getTotalFournisseur(1);
@@ -71,15 +63,33 @@ class CompteService
     /**
      * 🔹 Vérifie le solde avant une opération donnée
      */
-    public static function verifierSoldeAvantOperation(int $id_compte, int $id_devise, float $montant): array
+    public static function verifierSoldeAvantOperation(int $id_compte, int $id_deviseOperation, float $montant): array
     {
-        $solde = self::calculerSoldeParDevise($id_compte, $id_devise);
+        $compte = Compte::with('devise')->find($id_compte);
 
+        if (! $compte) {
+            return [
+                'status'  => false,
+                'message' => "Compte introuvable.",
+            ];
+        }
+
+        // 🔸 Vérifie si la devise de l’opération correspond à celle du compte
+        if ($compte->devise_id !== $id_deviseOperation) {
+            return [
+                'status'  => false,
+                'message' => "Opération refusée : la devise de l’opération ({$id_deviseOperation}) ne correspond pas à celle du compte ({$compte->devise->symbole}).",
+            ];
+        }
+
+        // 🔸 Calcule le solde actuel du compte
+        $solde = self::calculerSolde($id_compte);
+
+        // 🔸 Vérifie si le solde est suffisant
         if ($solde < $montant) {
             return [
                 'status'  => false,
-                'message' => "Solde insuffisant pour effectuer cette opération.
-                              Solde disponible : {$solde}",
+                'message' => "Solde insuffisant. Solde disponible : {$solde} {$compte->devise->symbole}",
                 'solde' => $solde,
             ];
         }
@@ -90,4 +100,5 @@ class CompteService
             'solde'   => $solde,
         ];
     }
+
 }
