@@ -53,7 +53,7 @@ trait CalculOperations
             ->get()
             ->map(fn($op) => $this->formatOperation($op, [
                 'fullname' => $op->fournisseur->name,
-                'type' => 'fournisseur',
+                'type' => 'Opération du fournisseur: ' . $op->fournisseur->name,
             ]));
     }
 
@@ -68,7 +68,7 @@ trait CalculOperations
             ->get()
             ->map(fn($op) => $this->formatOperation($op, [
                 'fullname' => $op->client->nom_complet ?? null,
-                'type' => $op->client->type_client ?? null,
+                'type' => 'Opération du client (' . $op->client->type_client . ') ' . $op->client->nom_complet,
             ]));
     }
 
@@ -83,7 +83,7 @@ trait CalculOperations
             ->get()
             ->map(fn($op) => $this->formatOperation($op, [
                 'fullname' => $op->divers->name ?? null,
-                'type' => $op->divers->type ?? null,
+                'type' => 'Opération divers (' .$op->divers->type . ') ' . $op->divers->name,
             ]));
     }
 
@@ -98,7 +98,7 @@ trait CalculOperations
             ->get()
             ->map(fn($op) => $this->formatOperation($op, [
                 'fullname' => "",
-                'type' => 'Caisse',
+                'type' => 'Opération de la caisse',
             ]));
     }
 
