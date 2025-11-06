@@ -30,7 +30,7 @@ class ClientResource extends JsonResource
             'email'           => $this->email,
 
             // 💰 Soldes actuels
-            'soldes'          => $solde,
+            'soldes'          => $solde['soldes'],
 
             // 📊 Relevé du compte client (fixings + opérations)
             'releve_client'   => $releve,

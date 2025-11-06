@@ -163,131 +163,103 @@ class ClientService
         }
     }
 
-    /**
-     * 🔹 Calcul du solde par devise (USD / GNF)
-     */
+    
+
+    
     // public function calculerSoldeClient(int $id_client): array
     // {
-    //     // 🔹 Fonction interne pour calculer le total par devise et par nature
-    //     $getTotalParDevise = function (string $deviseSymbole, int $nature) use ($id_client) {
-    //         return OperationClient::where('id_client', $id_client)
-    //             ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature)) // 1 = entrée, 0 = sortie
-    //             ->whereHas('devise', fn($q) => $q->where('symbole', $deviseSymbole))
-    //             ->sum('montant');
-    //     };
+    //     // 🔹 Récupérer toutes les devises actives
+    //     $devises = Devise::select('id', 'symbole')->get();
 
-    //     // 🔹 Totaux des opérations
-    //     $entreesUSD = $getTotalParDevise('USD', 1);
-    //     $entreesGNF = $getTotalParDevise('GNF', 1);
+    //     $soldes = [];
 
-    //     $sortiesUSD = $getTotalParDevise('USD', 0);
-    //     $sortiesGNF = $getTotalParDevise('GNF', 0);
+    //     foreach ($devises as $devise) {
+    //         // 🔸 Convertir le symbole en minuscule
+    //         $symbole = strtolower($devise->symbole);
 
-    //     // 🔹 Factures (sorties automatiques liées aux fixings)
-    //     $fixings = FixingClient::with('devise')->where('id_client', $id_client)->get();
+    //         // 🔸 Calcul du total par nature (1 = entrée, 0 = sortie)
+    //         $getTotalParNature = function (int $nature) use ($id_client, $symbole) {
+    //             return OperationClient::where('id_client', $id_client)
+    //                 ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
+    //                 ->whereHas('devise', fn($q) => $q->whereRaw('LOWER(symbole) = ?', [$symbole]))
+    //                 ->sum('montant');
+    //         };
 
-    //     foreach ($fixings as $fixing) {
-    //         $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
-    //         $montant = $calcul['total_facture'] ?? 0;
+    //         $entrees = $getTotalParNature(1);
+    //         $sorties = $getTotalParNature(0);
 
-    //         if ($fixing->devise?->symbole === 'USD') {
-    //             $sortiesUSD += $montant;
-    //         } elseif ($fixing->devise?->symbole === 'GNF') {
-    //             $sortiesGNF += $montant;
+    //         // 🔹 Ajouter les factures (fixings)
+    //         $fixings = FixingClient::with('devise')
+    //             ->where('id_client', $id_client)
+    //             ->whereHas('devise', fn($q) => $q->whereRaw('LOWER(symbole) = ?', [$symbole]))
+    //             ->get();
+
+    //         foreach ($fixings as $fixing) {
+    //             $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
+    //             $montant = $calcul['total_facture'] ?? 0;
+    //             $sorties += $montant;
     //         }
+
+    //         // 🔹 Stocker le solde par devise (clé en minuscule)
+    //         $soldes[$symbole] = round($entrees - $sorties, 2);
     //     }
 
-    //     // 🔹 Solde final
-    //     return [
-    //         'solde_usd' => round($entreesUSD - $sortiesUSD, 2),
-    //         'solde_gnf' => round($entreesGNF - $sortiesGNF, 2),
-    //     ];
+    //     return $soldes;
     // }
-
-    // public function calculerSoldeClient(int $id_client): array
-    // {
-    //     // 🔹 Fonction interne pour calculer le total par devise et par nature
-    //     $getTotalParDevise = function (string $deviseSymbole, int $nature) use ($id_client) {
-    //         return OperationClient::where('id_client', $id_client)
-    //             ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature)) // 1 = entrée, 0 = sortie
-    //             ->whereHas('devise', fn($q) => $q->where('symbole', $deviseSymbole))
-    //             ->sum('montant');
-    //     };
-
-    //     // 🔹 Totaux des opérations
-    //     $entreesUSD = $getTotalParDevise('USD', 1);
-    //     $entreesGNF = $getTotalParDevise('GNF', 1);
-
-    //     $sortiesUSD = $getTotalParDevise('USD', 0);
-    //     $sortiesGNF = $getTotalParDevise('GNF', 0);
-
-    //     // 🔹 Factures (sorties automatiques liées aux fixings)
-    //     $fixings = FixingClient::with('devise')->where('id_client', $id_client)->get();
-
-    //     foreach ($fixings as $fixing) {
-    //         $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
-    //         $montant = $calcul['total_facture'] ?? 0;
-
-    //         if ($fixing->devise?->symbole === 'USD') {
-    //             $sortiesUSD += $montant;
-    //         } elseif ($fixing->devise?->symbole === 'GNF') {
-    //             $sortiesGNF += $montant;
-    //         }
-    //     }
-
-    //     // 🔹 Solde final
-    //     return [
-    //         'solde_usd'   => round($entreesUSD - $sortiesUSD, 2),
-    //         'solde_gnf'   => round($entreesGNF - $sortiesGNF, 2),
-
-    //         // ✅ Ajout demandé : flux des opérations
-    //         'entrees_usd' => round($entreesUSD, 2),
-    //         'sorties_usd' => round($sortiesUSD, 2),
-    //         'entrees_gnf' => round($entreesGNF, 2),
-    //         'sorties_gnf' => round($sortiesGNF, 2),
-    //     ];
-    // }
-
     public function calculerSoldeClient(int $id_client): array
-    {
-        // 🔹 Récupérer toutes les devises actives
-        $devises = Devise::select('id', 'symbole')->get();
+{
+    // 🔹 Récupérer toutes les devises actives
+    $devises = Devise::select('id', 'symbole')->get();
 
-        $soldes = [];
+    $soldes = [];
+    $flux   = [];
 
-        foreach ($devises as $devise) {
-            // 🔸 Convertir le symbole en minuscule
-            $symbole = strtolower($devise->symbole);
+    foreach ($devises as $devise) {
+        $symbole = strtolower($devise->symbole);
 
-            // 🔸 Calcul du total par nature (1 = entrée, 0 = sortie)
-            $getTotalParNature = function (int $nature) use ($id_client, $symbole) {
-                return OperationClient::where('id_client', $id_client)
-                    ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
-                    ->whereHas('devise', fn($q) => $q->whereRaw('LOWER(symbole) = ?', [$symbole]))
-                    ->sum('montant');
-            };
-
-            $entrees = $getTotalParNature(1);
-            $sorties = $getTotalParNature(0);
-
-            // 🔹 Ajouter les factures (fixings)
-            $fixings = FixingClient::with('devise')
-                ->where('id_client', $id_client)
+        // 🔸 Fonction pour totaliser par nature (1 = entrée, 0 = sortie)
+        $getTotalParNature = function (int $nature) use ($id_client, $symbole) {
+            return OperationClient::where('id_client', $id_client)
+                ->whereHas('typeOperation', fn($q) => $q->where('nature', $nature))
                 ->whereHas('devise', fn($q) => $q->whereRaw('LOWER(symbole) = ?', [$symbole]))
-                ->get();
+                ->sum('montant');
+        };
 
-            foreach ($fixings as $fixing) {
-                $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
-                $montant = $calcul['total_facture'] ?? 0;
-                $sorties += $montant;
-            }
+        // 🔹 Totaux d’opérations
+        $entrees = $getTotalParNature(1);
+        $sorties = $getTotalParNature(0);
 
-            // 🔹 Stocker le solde par devise (clé en minuscule)
-            $soldes[$symbole] = round($entrees - $sorties, 2);
+        // 🔹 Ajouter les factures (fixings)
+        $fixings = FixingClient::with('devise')
+            ->where('id_client', $id_client)
+            ->whereHas('devise', fn($q) => $q->whereRaw('LOWER(symbole) = ?', [$symbole]))
+            ->get();
+
+        foreach ($fixings as $fixing) {
+            $calcul  = app(FixingClientService::class)->calculerFacture($fixing->id);
+            $montant = $calcul['total_facture'] ?? 0;
+            $sorties += $montant;
         }
 
-        return $soldes;
+        // 🔹 Calcul du solde final pour la devise
+        $solde = $entrees - $sorties;
+
+        // 🔹 Enregistrement
+        $flux[$symbole] = [
+            'entrees' => round($entrees, 2),
+            'sorties' => round($sorties, 2),
+        ];
+
+        $soldes[$symbole] = round($solde, 2);
     }
+
+    // 🔹 Structure finale uniforme avec calculerSoldeDivers
+    return [
+        'soldes' => $soldes,
+        'flux'   => $flux,
+    ];
+}
+
 
     /**
      * 🔹 Relevé complet (Fixings + Opérations)
