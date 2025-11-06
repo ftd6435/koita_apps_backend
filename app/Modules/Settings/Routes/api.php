@@ -6,7 +6,7 @@ use App\Modules\Settings\Controllers\DeviseController;
 use App\Modules\Settings\Controllers\DiversController;
 
 Route::middleware('auth:sanctum')->prefix('v1/settings/')->group(function () {
-    Route::get('devises/taux',[DeviseController::class,'testTaux']);
+   
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('devises', DeviseController::class);
     
