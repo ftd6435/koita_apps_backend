@@ -37,7 +37,7 @@ class ClientResource extends JsonResource
             'soldes'         => $solde['soldes'] ?? [],
 
             // 🟡 Relevé du client (séparé en deux parties)
-            'operations_financieres' => $releve['operations_financieres'] ?? [],
+            'operations_financieres' => $releve['releve_chronologique'] ?? [],
             'operations_or'          => $releve['operations_or'] ?? [],
 
             // 📦 Informations sur le stock

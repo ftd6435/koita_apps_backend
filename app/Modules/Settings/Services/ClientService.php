@@ -327,112 +327,222 @@ class ClientService
         }
     }
 
-    
+    // public function getReleveClient(int $id_client): array
+    // {
+    //     $devises = Devise::pluck('symbole')->map(fn($s) => strtolower($s));
 
-    public function getReleveClient(int $id_client): array
+    //     // ============================
+    //     // 💰 PARTIE 1 : Opérations financières
+    //     // ============================
+    //     $operationsClient = OperationClient::with(['typeOperation', 'devise', 'compte.banque'])
+    //         ->where('id_client', $id_client)
+    //         ->orderBy('created_at', 'asc')
+    //         ->get()
+    //         ->map(function ($op) {
+    //             $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
+    //             return [
+    //                 'date'          => $op->created_at?->format('Y-m-d H:i:s'),
+    //                 'reference'     => $op->reference,
+    //                 'libelle'       => $op->typeOperation?->libelle ?? 'Opération client',
+    //                 'banque'        => $op->compte?->banque?->libelle ?? null,
+    //                 'numero_compte' => $op->compte?->numero_compte ?? null,
+    //                 'devise'        => strtolower($op->devise?->symbole ?? 'gnf'),
+    //                 'debit'         => $nature == 0 ? (float) $op->montant : 0,
+    //                 'credit'        => $nature == 1 ? (float) $op->montant : 0,
+    //             ];
+    //         });
+
+    //     // 🔹 Calcul des soldes progressifs financiers
+    //     $resultatsFinanciers = [];
+    //     $soldesFinanciers    = [];
+
+    //     foreach ($devises as $symbole) {
+    //         $soldesFinanciers[$symbole]    = 0;
+    //         $resultatsFinanciers[$symbole] = [];
+    //     }
+
+    //     foreach ($operationsClient as $ligne) {
+    //         $symbole = $ligne['devise'] ?: 'gnf';
+    //         if (! isset($soldesFinanciers[$symbole])) {
+    //             $soldesFinanciers[$symbole]    = 0;
+    //             $resultatsFinanciers[$symbole] = [];
+    //         }
+
+    //         $soldesFinanciers[$symbole] += $ligne['credit'] - $ligne['debit'];
+    //         $ligne['solde_apres']            = round($soldesFinanciers[$symbole], 2);
+    //         $resultatsFinanciers[$symbole][] = $ligne;
+    //     }
+
+    //     // ============================
+    //     // 🟡 PARTIE 2 : Fixings (ventes d'or)
+    //     // ============================
+    //     $fixings = FixingClient::with(['devise'])
+    //         ->where('id_client', $id_client)
+    //         ->where('status', 'vendu')
+    //         ->orderBy('created_at', 'asc')
+    //         ->get()
+    //         ->map(function ($fix) {
+    //             $calcul = app(FixingClientService::class)->calculerFacture($fix->id);
+
+    //             return [
+    //                 'date'      => $fix->created_at?->format('Y-m-d H:i:s'),
+    //                 'reference' => "FIX-" . str_pad($fix->id, 5, '0', STR_PAD_LEFT),
+    //                 'libelle'   => "Vente or : {$calcul['poids_total']} g à {$calcul['prix_unitaire']} /g",
+    //                 'poids_entree'  => 0,
+    //                 'poids_sortie'  => (float) ($calcul['poids_total'] ?? 0),
+    //                 'bourse'        => round($calcul['bourse'] ?? 0, 2),
+    //                 'discompte'     => round($calcul['discompte'] ?? 0, 2),
+    //                 'prix_unitaire' => round($calcul['prix_unitaire'] ?? 0, 2),
+    //                 'total_facture' => round($calcul['total_facture'] ?? 0, 2),
+    //                 'devise'        => strtolower($fix->devise?->symbole ?? 'gnf'),
+    //             ];
+    //         });
+
+    //     // ============================
+    //     // ⚖️ Calcul du stock d’or réel
+    //     // ============================
+    //     $stockClient  = $this->calculerStockClient($id_client);
+    //     $poidsRestant = $stockClient['total_livre'] ?? 0; // départ = stock total livré
+
+    //     $resultatsOr = [];
+
+    //     foreach ($fixings as $ligne) {
+    //         $poidsRestant -= $ligne['poids_sortie']; // retrancher chronologiquement chaque vente
+    //         $ligne['poids_apres'] = round($poidsRestant, 3);
+    //         $resultatsOr[]        = $ligne;
+    //     }
+
+    //     // ============================
+    //     // 🔁 INVERSER L’ORDRE (plus récent → plus ancien)
+    //     // ============================
+    //     foreach ($resultatsFinanciers as $symbole => &$liste) {
+    //         $liste = array_reverse($liste);
+    //     }
+    //     unset($liste);
+
+    //     $resultatsOr = array_reverse($resultatsOr);
+
+    //     // ============================
+    //     // ✅ STRUCTURE FINALE
+    //     // ============================
+    //     return [
+    //         'status'                 => 200,
+    //         'message'                => 'Relevé complet du client généré avec succès.',
+    //         'operations_financieres' => $resultatsFinanciers,
+    //         'operations_or'          => $resultatsOr,
+    //         'stock'                  => $stockClient,
+    //     ];
+    // }
+    public function  getReleveClient(int $id_client): array
     {
-        $devises = Devise::pluck('symbole')->map(fn($s) => strtolower($s));
-
-        // ============================
-        // 💰 PARTIE 1 : Opérations financières
-        // ============================
-        $operationsClient = OperationClient::with(['typeOperation', 'devise', 'compte.banque'])
+        // 🔹 Opérations financières
+        $operations = OperationClient::with(['typeOperation', 'devise', 'compte.banque'])
             ->where('id_client', $id_client)
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($op) {
                 $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
                 return [
-                    'date'          => $op->created_at?->format('Y-m-d H:i:s'),
-                    'reference'     => $op->reference,
-                    'libelle'       => $op->typeOperation?->libelle ?? 'Opération client',
-                    'banque'        => $op->compte?->banque?->libelle ?? null,
-                    'numero_compte' => $op->compte?->numero_compte ?? null,
-                    'devise'        => strtolower($op->devise?->symbole ?? 'gnf'),
-                    'debit'         => $nature == 0 ? (float) $op->montant : 0,
-                    'credit'        => $nature == 1 ? (float) $op->montant : 0,
+                    'type'                => 'operation',
+                    'date'                => $op->created_at?->format('Y-m-d H:i:s'),
+                    'reference_operation' => $op->reference,
+                    'libelle_operation'   => $op->typeOperation?->libelle ?? 'Opération client',
+                    'banque'              => $op->compte?->banque?->libelle ?? null,
+                    'numero_compte'       => $op->compte?->numero_compte ?? null,
+                    'devise'              => strtolower($op->devise?->symbole ?? 'gnf'),
+                    'debit'               => $nature == 0 ? (float) $op->montant : 0,
+                    'credit'              => $nature == 1 ? (float) $op->montant : 0,
+                    'solde_apres'         => 0,
+                    'solde_apres_fixing'  => 0,
+
+                    // Colonnes or vides
+                    'reference_fixing'    => null,
+                    'libelle_fixing'      => null,
+                    'poids_entree'        => 0,
+                    'poids_sortie'        => 0,
+                    'stock_apres'         => 0,
                 ];
             });
 
-        // 🔹 Calcul des soldes progressifs financiers
-        $resultatsFinanciers = [];
-        $soldesFinanciers    = [];
-
-        foreach ($devises as $symbole) {
-            $soldesFinanciers[$symbole]    = 0;
-            $resultatsFinanciers[$symbole] = [];
-        }
-
-        foreach ($operationsClient as $ligne) {
-            $symbole = $ligne['devise'] ?: 'gnf';
-            if (! isset($soldesFinanciers[$symbole])) {
-                $soldesFinanciers[$symbole]    = 0;
-                $resultatsFinanciers[$symbole] = [];
-            }
-
-            $soldesFinanciers[$symbole] += $ligne['credit'] - $ligne['debit'];
-            $ligne['solde_apres']            = round($soldesFinanciers[$symbole], 2);
-            $resultatsFinanciers[$symbole][] = $ligne;
-        }
-
-        // ============================
-        // 🟡 PARTIE 2 : Fixings (ventes d'or)
-        // ============================
+        // 🔹 Fixings
         $fixings = FixingClient::with(['devise'])
             ->where('id_client', $id_client)
-            ->where('status', 'vendu')
+            ->whereIn('status', ['vendu', 'provisoire'])
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($fix) {
                 $calcul = app(FixingClientService::class)->calculerFacture($fix->id);
 
                 return [
-                    'date'      => $fix->created_at?->format('Y-m-d H:i:s'),
-                    'reference' => "FIX-" . str_pad($fix->id, 5, '0', STR_PAD_LEFT),
-                    'libelle'   => "Vente or : {$calcul['poids_total']} g à {$calcul['prix_unitaire']} /g",
+                    'type'                => 'fixing',
+                    'date'                => $fix->created_at?->format('Y-m-d H:i:s'),
+                    'reference_operation' => null,
+                    'libelle_operation'   => null,
+                    'banque'              => null,
+                    'numero_compte'       => null,
+                    'devise'              => strtolower($fix->devise?->symbole ?? 'gnf'),
+                    'debit'               => 0,
+                    'credit'              => 0,
+                    'solde_apres'         => 0,
+                    'solde_apres_fixing'  => 0,
+
+                    // Colonnes liées à l’or
+                    'reference_fixing'    => "FIX-" . str_pad($fix->id, 5, '0', STR_PAD_LEFT),
+                    'libelle_fixing'      => "Vente or : {$calcul['poids_total']} g à {$calcul['prix_unitaire']} /g",
                     'poids_entree'  => 0,
                     'poids_sortie'  => (float) ($calcul['poids_total'] ?? 0),
-                    'bourse'        => round($calcul['bourse'] ?? 0, 2),
-                    'discompte'     => round($calcul['discompte'] ?? 0, 2),
-                    'prix_unitaire' => round($calcul['prix_unitaire'] ?? 0, 2),
-                    'total_facture' => round($calcul['total_facture'] ?? 0, 2),
-                    'devise'        => strtolower($fix->devise?->symbole ?? 'gnf'),
+                    'stock_apres'   => 0,
+
+                    // Valeur de la vente (impact sur solde_apres_fixing)
+                    'total_facture' => (float) ($calcul['total_facture'] ?? 0),
                 ];
             });
 
-        // ============================
-        // ⚖️ Calcul du stock d’or réel
-        // ============================
-        $stockClient  = $this->calculerStockClient($id_client);
-        $poidsRestant = $stockClient['total_livre'] ?? 0; // départ = stock total livré
+        // 🔹 Fusion chronologique
+        $chronologique = $operations->concat($fixings)
+            ->sortBy('date')
+            ->values();
 
-        $resultatsOr = [];
+        // 🔹 Calculs progressifs
+        $soldes = [];
+        $stocks = [];
 
-        foreach ($fixings as $ligne) {
-            $poidsRestant -= $ligne['poids_sortie']; // retrancher chronologiquement chaque vente
-            $ligne['poids_apres'] = round($poidsRestant, 3);
-            $resultatsOr[]        = $ligne;
+        foreach ($chronologique as &$ligne) {
+            $symbole = $ligne['devise'] ?? 'gnf';
+
+            // === ARGENT ===
+            if (! isset($soldes[$symbole])) {
+                $soldes[$symbole] = 0;
+            }
+
+            // Mouvements financiers
+            $soldes[$symbole] += $ligne['credit'] - $ligne['debit'];
+            $ligne['solde_apres'] = round($soldes[$symbole], 2);
+
+            // === OR ===
+            if (! isset($stocks[$symbole])) {
+                $stocks[$symbole] = 0;
+            }
+
+            if ($ligne['type'] === 'fixing') {
+                $stocks[$symbole] -= $ligne['poids_sortie'];
+            }
+            $ligne['stock_apres'] = round($stocks[$symbole], 3);
+
+            // === Solde après fixing (impact de la facture) ===
+            if ($ligne['type'] === 'fixing' && isset($ligne['total_facture'])) {
+                $soldes[$symbole] -= $ligne['total_facture']; // sortie argent après vente
+            }
+            $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
         }
 
-        // ============================
-        // 🔁 INVERSER L’ORDRE (plus récent → plus ancien)
-        // ============================
-        foreach ($resultatsFinanciers as $symbole => &$liste) {
-            $liste = array_reverse($liste);
-        }
-        unset($liste);
+        // 🔁 Tri décroissant (plus récent en premier)
+        $chronologique = $chronologique->sortByDesc('date')->values();
 
-        $resultatsOr = array_reverse($resultatsOr);
-
-        // ============================
-        // ✅ STRUCTURE FINALE
-        // ============================
         return [
-            'status'                 => 200,
-            'message'                => 'Relevé complet du client généré avec succès.',
-            'operations_financieres' => $resultatsFinanciers,
-            'operations_or'          => $resultatsOr,
-            'stock'                  => $stockClient,
+            'status'               => 200,
+            'message'              => 'Relevé combiné généré avec succès.',
+            'releve_chronologique' => $chronologique,
         ];
     }
 
