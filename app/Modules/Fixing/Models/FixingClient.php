@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Modules\Fixing\Models;
 
 use App\Modules\Administration\Models\User;
@@ -18,6 +17,7 @@ class FixingClient extends Model
     protected $fillable = [
         'id_client',
         'id_devise',
+        'reference',
         'poids_pro',
         'carrat_moyen',
         'discompte',
@@ -67,13 +67,26 @@ class FixingClient extends Model
     }
 
     // ===============================
-    // 🔹 LOGIQUE AUTOMATIQUE DU STATUT
+    // 🔹 LOGIQUE AUTOMATIQUE : Référence + Statut
     // ===============================
 
     protected static function booted()
     {
+        // 🔸 Génération automatique de la référence à la création
+        static::creating(function ($fixing) {
+            $lastId            = self::withTrashed()->max('id') ?? 0;
+            $fixing->reference = 'FIX-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
+
+            // 🔹 Déterminer le statut automatiquement
+            if (is_null($fixing->prix_unitaire) || is_null($fixing->discompte)) {
+                $fixing->status = 'provisoire';
+            } else {
+                $fixing->status = 'vendu';
+            }
+        });
+
+        // 🔸 Mise à jour du statut lors des modifications
         static::saving(function ($fixing) {
-            // Si le prix_unitaire ou le discompte est absent → fixing provisoire
             if (is_null($fixing->prix_unitaire) || is_null($fixing->discompte)) {
                 $fixing->status = 'provisoire';
             } else {

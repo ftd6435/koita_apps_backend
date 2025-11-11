@@ -78,15 +78,19 @@ class ClientController extends Controller
     }
 
     public function soldeGlobal()
-{
-    $resultat = $this->clientService->calculerSoldeGlobalClients();
+    {
+        $resultat = $this->clientService->calculerSoldeGlobalClients();
 
-    return response()->json([
-        'status'  => 200,
-        'message' => 'Solde global de tous les clients récupéré avec succès.',
-        'data'    => $resultat,
-    ], 200);
-}
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Solde global de tous les clients récupéré avec succès.',
+            'data'    => $resultat,
+        ], 200);
+    }
 
+    public function getFixingsProvisoiresByClient(int $id_client)
+    {
+        return $this->clientService->getFixingsProvisoiresByClient($id_client);
+    }
 
 }

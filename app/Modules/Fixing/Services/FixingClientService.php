@@ -192,7 +192,7 @@ class FixingClientService
         $typeClient = $fixing->client?->type_client ?? 'local';
 
         // 💎 Pureté = (poids_pro × carat_moyen) / 24
-        $pureteTotale = ($poidsPro * $caratMoyen) / 24;
+        $pureteTotale = ($poidsPro ) / 24;
 
         // 💰 Calcul du prix unitaire
         $prixUnitaire = $typeClient === 'local'
@@ -206,7 +206,7 @@ class FixingClientService
             'id_fixing'     => $fixing->id,
             'type_client'   => $typeClient,
             'poids_total'   => round($poidsPro, 2),
-            'carrat_moyen'  => round($caratMoyen, 2),
+            
             'bourse'        => round($bourse, 2),
             'discompte'     => round($discompte, 2),
             'purete_totale' => round($pureteTotale, 2),

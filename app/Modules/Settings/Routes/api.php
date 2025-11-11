@@ -12,7 +12,8 @@ Route::middleware('auth:sanctum')->prefix('v1/settings/')->group(function () {
     
     Route::apiResource('divers', DiversController::class);
     Route::get('releve-periode/clients/{id_client}', [ClientController::class, 'getReleveClientPeriode']);
-    Route::get('solde-global/divers', [DiversController::class, 'soldeGlobal']);
+     Route::get('clients/fixings-provisoire/{id_clien}',[ClientController::class,'getFixingsProvisoiresByClient']);
+     Route::get('solde-global/divers', [DiversController::class, 'soldeGlobal']);
      Route::get('solde-global/clients', [ClientController::class, 'soldeGlobal']);
 
 
