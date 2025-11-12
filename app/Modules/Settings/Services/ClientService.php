@@ -472,7 +472,7 @@ class ClientService
         // ============================
         $fixings = FixingClient::with(['devise'])
             ->where('id_client', $id_client)
-            ->where('status', 'vendu') // ✅ correction ici
+            ->where('status', 'vendu')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($fix) {
@@ -507,7 +507,7 @@ class ClientService
             ->values();
 
         // ============================
-        // ⚙️ CALCUL DU SOLDE ET STOCK PAR DEVISE
+        // ⚙️ CALCUL DU SOLDE PAR DEVISE
         // ============================
         $soldes = [];
         $stocks = [];
@@ -515,30 +515,32 @@ class ClientService
         foreach ($chronologique as &$ligne) {
             $symbole = $ligne['devise'] ?? 'gnf';
 
-            // Initialisation du solde et du stock par devise
+            // Initialisation du solde et du stock
             $soldes[$symbole] = $soldes[$symbole] ?? 0;
             $stocks[$symbole] = $stocks[$symbole] ?? 0;
 
-            // ✅ Si opération classique → on additionne ou soustrait
+            // ✅ Si opération financière (entrée ou sortie)
             if ($ligne['type'] === 'operation') {
                 $soldes[$symbole] += ($ligne['credit'] - $ligne['debit']);
+                $ligne['solde_apres']        = round($soldes[$symbole], 2);
+                $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
             }
 
-            // ✅ On met à jour le solde après opération
-            $ligne['solde_apres'] = round($soldes[$symbole], 2);
-
-            // ✅ Si fixing → impacte uniquement le solde de sa devise
+            // ✅ Si fixing (sortie d’argent)
             if ($ligne['type'] === 'fixing') {
-                // Le fixing réduit le solde (vente d’or = sortie d’argent)
+                // solde avant déduction
+                $ligne['solde_apres'] = round($soldes[$symbole], 2);
+
+                // on déduit le total facture
                 $soldes[$symbole] -= (float) $ligne['total_facture'];
+
+                // solde après déduction
+                $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
+
+                // gestion du stock (poids vendu)
                 $stocks[$symbole] -= (float) $ligne['poids_sortie'];
+                $ligne['stock_apres'] = round($stocks[$symbole], 3);
             }
-
-            // ✅ Solde après fixing
-            $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
-
-            // ✅ Stock après fixing
-            $ligne['stock_apres'] = round($stocks[$symbole], 3);
         }
 
         // ============================
@@ -547,7 +549,7 @@ class ClientService
         $chronologique = $chronologique->sortByDesc('date')->values();
 
         // ============================
-        // ✅ STRUCTURE FINALE
+        // ✅ STRUCTURE FINALE (inchangée)
         // ============================
         return [
             'status'               => 200,
