@@ -23,17 +23,35 @@ trait Helper
     {
         $barres = Barre::where('achat_id', $achat_id)->get();
 
-        $multplication = 0;
+        // $multplication = 0;
 
         foreach ($barres as $barre) {
-            $multplication += $barre->poid_pure * $barre->carrat_pure;
+            // $multplication += $barre->poid_pure * $barre->carrat_pure;
+            $sum_pureter = $this->pureter($barre->poid_pure, $barre->carrat_pure);
         }
 
-        $somme = $barres->sum('poid_pure');
+        $poids = $barres->sum('poid_pure');
 
-        $moyenne = $somme > 0 ? ($multplication / $somme) : 0;
+        if($poids == 0){
+            return 0;
+        }
 
-        return $moyenne;
+        // $moyenne = $somme > 0 ? ($multplication / $somme) : 0;
+        $moyenne = ($sum_pureter / $poids) * 24;
+
+        return (float) number_format($moyenne, 2);
+    }
+
+    public function pureterMoyenne($achat)
+    {
+        $barres = Barre::where('achat_id', $achat)->get();
+        $somme_pureter = 0;
+
+        foreach($barres as $barre){
+            $somme_pureter += $this->pureter($barre->poid_pure, $barre->carrat_pure);
+        }
+
+        return (float) number_format($somme_pureter, 2);
     }
 
     public function poidsFixing($fixing_id)
@@ -612,8 +630,8 @@ trait Helper
         }
 
         // Calculate sum of (poid_pure * carrat_pure)
-        $sum_weighted = $barres->sum(function ($barre) {
-            return ($barre->poid_pure ?? 0) * ($barre->carrat_pure ?? 0);
+        $sum_pureter = $barres->sum(function ($barre) {
+            return $this->pureter($barre->poid_pure, $barre->carrat_pure);
         });
 
         // Calculate sum of poid_pure
@@ -625,9 +643,9 @@ trait Helper
         }
 
         // Calculate weighted average
-        $carrat_moyen_non_fixer = $sum_weighted / $sum_poid_pure;
+        $carrat_moyen_non_fixer = ($sum_pureter / $sum_poid_pure) * 24;
 
-        return $carrat_moyen_non_fixer;
+        return (float) number_format($carrat_moyen_non_fixer, 2);
     }
 
     /**
