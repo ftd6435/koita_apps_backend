@@ -25,12 +25,14 @@ class FixingClientService
 
             // ✅ Création du fixing client
             $fixing = FixingClient::create($payload);
+            $fixing->load(['client', 'devise', 'createur', 'modificateur']);
 
             DB::commit();
 
             return response()->json([
                 'status'  => 200,
                 'message' => 'Fixing client créé avec succès.',
+                'data'    => new FixingClientResource($fixing),
                 
             ]);
         } catch (Exception $e) {

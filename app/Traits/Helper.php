@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Traits;
 
 use App\Modules\Administration\Models\Fournisseur;
@@ -40,7 +39,7 @@ trait Helper
     {
         $fixing_barres = FixingBarre::where('fixing_id', $fixing_id)->get();
 
-        if (!$fixing_barres) {
+        if (! $fixing_barres) {
             return 0;
         }
 
@@ -79,7 +78,7 @@ trait Helper
     {
         $fixing_barres = FixingBarre::where('fixing_id', $fixing_id)->get();
 
-        if (!$fixing_barres) {
+        if (! $fixing_barres) {
             return 0;
         }
 
@@ -108,7 +107,7 @@ trait Helper
     {
         $barre_fondue = Fondation::where('ids_barres', $id)->first();
 
-        if (!$barre_fondue) {
+        if (! $barre_fondue) {
             return null;
         }
 
@@ -135,9 +134,9 @@ trait Helper
         }
 
         // Normalize all numeric inputs
-        $unit_price = ($unit_price ?? 0);
-        $densite = ($barre->densite ?? 0);
-        $poid_pure = ($barre->poid_pure ?? 0);
+        $unit_price  = ($unit_price ?? 0);
+        $densite     = ($barre->densite ?? 0);
+        $poid_pure   = ($barre->poid_pure ?? 0);
         $carrat_pure = ($barre->carrat_pure ?? 0);
 
         $montant = 0;
@@ -146,7 +145,7 @@ trait Helper
             $barre_fondue = Fondation::where('ids_barres', $barre->id)->first();
 
             if ($barre_fondue) {
-                $poids_dubai = ($barre_fondue->poids_dubai ?? 0);
+                $poids_dubai  = ($barre_fondue->poids_dubai ?? 0);
                 $carrat_dubai = ($barre_fondue->carrat_dubai ?? 0);
 
                 if ($barre_fondue->statut === 'corriger') {
@@ -174,7 +173,7 @@ trait Helper
 
         // $fixing_barres = FixingBarre::where('fixing_id', $fixing->id)->get();
         $montant_total = 0;
-        $unit_price = ($fixing->unit_price ?? 0);
+        $unit_price    = ($fixing->unit_price ?? 0);
 
         // foreach ($fixing_barres as $barre) {
         //     $montant_total +=  $this->montantBarre($barre->barre_id, $unit_price);
@@ -272,15 +271,15 @@ trait Helper
 
         // Add operations balances
         foreach ($operations as $op) {
-            $symbole = $op['symbole'];
-            $montant = $op['montant'];
+            $symbole          = $op['symbole'];
+            $montant          = $op['montant'];
             $totals[$symbole] = ($totals[$symbole] ?? 0) + $montant;
         }
 
         // Add fixing balances
         foreach ($fixings as $fix) {
-            $symbole = $fix['symbole'];
-            $montant = $fix['montant'];
+            $symbole          = $fix['symbole'];
+            $montant          = $fix['montant'];
             $totals[$symbole] = ($totals[$symbole] ?? 0) + $montant;
         }
 
@@ -304,38 +303,38 @@ trait Helper
     {
         // Initialize result array with all available currencies
         $devises = Devise::all();
-        $result = [];
-        
+        $result  = [];
+
         foreach ($devises as $devise) {
-            $symbole = strtolower($devise->symbole);
+            $symbole                      = strtolower($devise->symbole);
             $result["entrees_{$symbole}"] = 0;
             $result["sorties_{$symbole}"] = 0;
         }
-        
+
         // Operations
         $operations = FournisseurOperation::with(['typeOperation', 'devise'])
             ->where('fournisseur_id', $fournisseurId)
             ->get();
-        
+
         foreach ($operations as $operation) {
             $symbole = strtolower($operation->devise->symbole);
-            $nature = $operation->typeOperation->nature;
-            $key = ($nature == 1 ? 'entrees_' : 'sorties_') . $symbole;
+            $nature  = $operation->typeOperation->nature;
+            $key     = ($nature == 1 ? 'entrees_' : 'sorties_') . $symbole;
             $result[$key] += $operation->montant;
         }
-        
+
         // Fixings
         $fixings = Fixing::with('devise')->where('fournisseur_id', $fournisseurId)->get();
-        
+
         foreach ($fixings as $fixing) {
             $montant = $fixing->fixingBarres()->exists()
                 ? $this->montantFixing($fixing->id)
                 : ($fixing->unit_price / 22) * $fixing->poids_pro * $fixing->carrat_moyenne;
-            
+
             $key = 'entrees_' . strtolower($fixing->devise->symbole);
             $result[$key] += $montant;
         }
-        
+
         return $result;
     }
 
@@ -359,24 +358,24 @@ trait Helper
 
         // ✅ 1. Transform operations (if any) - convert to base collection
         $operations = collect($fournisseur->operations?->map(function ($op) {
-            $nature = $op->typeOperation?->nature ?? 0;
-            $montant = (float) ($op->montant ?? 0);
+            $nature        = $op->typeOperation?->nature ?? 0;
+            $montant       = (float) ($op->montant ?? 0);
             $dateOperation = $op->date_operation ? Carbon::parse($op->date_operation)->format('d-m-Y') : '';
-            $mouvement = ($op->reference ?? '') . ': ' . ($op->commentaire ?? '') . ' le ' . $dateOperation;
+            $mouvement     = ($op->reference ?? '') . ': ' . ($op->commentaire ?? '') . ' le ' . $dateOperation;
 
             return [
-                'date' => $op->created_at,
+                'date'      => $op->created_at,
                 'mouvement' => $mouvement,
-                'credit' => $nature == 1 ? $montant : 0,
-                'debit' => $nature == 0 ? $montant : 0,
-                'symbole' => $op->devise?->symbole ?? 'N/A',
+                'credit'    => $nature == 1 ? $montant : 0,
+                'debit'     => $nature == 0 ? $montant : 0,
+                'symbole'   => $op->devise?->symbole ?? 'N/A',
             ];
         }) ?? []);
 
         // ✅ 2. Transform fixings (if any) - convert to base collection
         $fixings = collect($fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
-            $devise = $fixing->devise;
-            $symbole = $devise?->symbole ?? 'N/A';
+            $devise    = $fixing->devise;
+            $symbole   = $devise?->symbole ?? 'N/A';
             $hasBarres = $fixing->fixingBarres?->count() > 0;
 
             // Compute unit_price if USD
@@ -441,8 +440,8 @@ trait Helper
     public function poidsNonFixer($fournisseurId)
     {
         $total_non_fixer = Barre::whereHas('achat', function ($query) use ($fournisseurId) {
-                $query->where('fournisseur_id', $fournisseurId);
-            })
+            $query->where('fournisseur_id', $fournisseurId);
+        })
             ->where('is_fixed', false)
             ->sum('poid_pure');
 
@@ -456,8 +455,8 @@ trait Helper
     {
         // Get all non-fixed barres for the fournisseur
         $barres = Barre::whereHas('achat', function ($query) use ($fournisseurId) {
-                $query->where('fournisseur_id', $fournisseurId);
-            })->where('is_fixed', false)->get(['poid_pure', 'carrat_pure']);
+            $query->where('fournisseur_id', $fournisseurId);
+        })->where('is_fixed', false)->get(['poid_pure', 'carrat_pure']);
 
         // If no barres found, return 0
         if ($barres->isEmpty()) {
@@ -597,8 +596,8 @@ trait Helper
     public function getAccountBalanceByDevise($compteId)
     {
         $compte = Compte::find($compteId);
-        
-        if(! $compte){
+
+        if (! $compte) {
             return 0;
         }
 
@@ -666,16 +665,21 @@ trait Helper
                 }
             }, 0) ?? 0;
 
-        
         // Sum all totals
         $totalBalance = $fournisseurTotal + $clientTotal + $diversTotal + $caisseTotal + $compte->solde_initial;
 
         return round($totalBalance, 2);
     }
 
+    // public function arroundir(int $precision, float $valeur): float
+    // {
+    //     return round($valeur, $precision);
+    // }
+
     public function arroundir(int $precision, float $valeur): float
     {
-        return round($valeur, $precision);
+        $facteur = pow(10, $precision);
+        return floor($valeur * $facteur) / $facteur;
     }
 
 }
