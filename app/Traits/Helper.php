@@ -548,10 +548,11 @@ trait Helper
             // Compute montant
             if ($hasBarres) {
                 $montant = (float) $this->montantFixing($fixing->id);
-                $commentaire = "Fixing de {$fournisseur->name}";
+                $poid_fixing = (float) $this->poidsFixing($fixing->id);
+                $commentaire = "Fixing de {$poid_fixing}g avec une bourde de {$fixing->bourse}";
             } else {
                 $montant = ($unit_price / 22) * (float) ($fixing->poids_pro ?? 0) * (float) ($fixing->carrat_moyenne ?? 0);
-                $commentaire = "Fixing provisoire par {$fournisseur->name}";
+                $commentaire = "Fixing provisoire de {$fixing->poids_pro}g avec une bourde de {$fixing->bourse}";
             }
 
             return [
