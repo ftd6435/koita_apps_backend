@@ -445,6 +445,7 @@ class ClientService
             ->get()
             ->map(function ($op) {
                 $nature = $op->typeOperation?->nature; // 1 = entrée, 0 = sortie
+
                 return [
                     'type'                => 'operation',
                     'date'                => $op->created_at?->format('Y-m-d H:i:s'),
@@ -471,7 +472,7 @@ class ClientService
         // ============================
         $fixings = FixingClient::with(['devise'])
             ->where('id_client', $id_client)
-            ->whereIn('status', ['vendu', 'provisoire'])
+            ->where('status', 'vendu') // ✅ correction ici
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($fix) {
@@ -506,7 +507,7 @@ class ClientService
             ->values();
 
         // ============================
-        // ⚙️ CALCUL DU SOLDE ET STOCK PROGRESSIF
+        // ⚙️ CALCUL DU SOLDE ET STOCK PAR DEVISE
         // ============================
         $soldes = [];
         $stocks = [];
@@ -514,27 +515,29 @@ class ClientService
         foreach ($chronologique as &$ligne) {
             $symbole = $ligne['devise'] ?? 'gnf';
 
-            // Initialisation
+            // Initialisation du solde et du stock par devise
             $soldes[$symbole] = $soldes[$symbole] ?? 0;
             $stocks[$symbole] = $stocks[$symbole] ?? 0;
 
-            // ✅ Solde après opérations normales (crédit - débit)
-            $soldes[$symbole] += ($ligne['credit'] - $ligne['debit']);
+            // ✅ Si opération classique → on additionne ou soustrait
+            if ($ligne['type'] === 'operation') {
+                $soldes[$symbole] += ($ligne['credit'] - $ligne['debit']);
+            }
+
+            // ✅ On met à jour le solde après opération
             $ligne['solde_apres'] = round($soldes[$symbole], 2);
 
-            // ✅ Si c’est un fixing → on déduit le total_facture
+            // ✅ Si fixing → impacte uniquement le solde de sa devise
             if ($ligne['type'] === 'fixing') {
+                // Le fixing réduit le solde (vente d’or = sortie d’argent)
                 $soldes[$symbole] -= (float) $ligne['total_facture'];
+                $stocks[$symbole] -= (float) $ligne['poids_sortie'];
             }
 
-            // ✅ Enregistrer le solde après fixing
+            // ✅ Solde après fixing
             $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
 
-            // ✅ Gestion du stock d’or
-            if ($ligne['type'] === 'fixing') {
-                $stocks[$symbole] -= $ligne['poids_sortie'];
-            }
-
+            // ✅ Stock après fixing
             $ligne['stock_apres'] = round($stocks[$symbole], 3);
         }
 
