@@ -842,7 +842,7 @@ class ClientService
                 return [
                     'type'                => 'livraison',
                     'date'                => $livraison->created_at?->format('Y-m-d H:i:s'),
-                    'reference_operation' => null,
+                    'reference_operation' => $livraison->reference,
                     'libelle_operation'   => 'Livraison d’or',
                     'banque'              => null,
                     'numero_compte'       => null,
