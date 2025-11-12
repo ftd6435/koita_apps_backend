@@ -40,7 +40,7 @@ class FournisseurOperationController extends Controller
         $fields['created_by'] = Auth::id();
 
         if(is_null($fields['reference'])){
-            $fields['reference'] = 'REF' . round(1000, 9999);
+            $fields['reference'] = 'REF' . rand(1000, 9999);
         }
 
         $compte = Compte::find($fields['compte_id']);
@@ -68,7 +68,7 @@ class FournisseurOperationController extends Controller
         if(! $fournisseur_operation){
             return $this->errorResponse("Operation fournisseur introuvable");
         }
-        
+
 
         $fields = $request->validated();
         $fields['updated_by'] = Auth::id();
