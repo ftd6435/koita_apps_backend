@@ -481,7 +481,7 @@ class ClientService
                     'banque'              => null,
                     'numero_compte'       => null,
                     'devise'              => strtolower($fix->devise?->symbole ?? 'gnf'),
-                    'debit'               => (float) ($calcul['total_facture'] ?? 0), // 🔹 impact sur solde
+                    'debit'               => (float) ($calcul['total_facture'] ?? 0),
                     'credit'              => 0,
                     'solde_apres'         => 0,
                     'solde_apres_fixing'  => 0,
@@ -508,16 +508,16 @@ class ClientService
             $soldes[$symbole] = $soldes[$symbole] ?? 0;
             $stocks[$symbole] = $stocks[$symbole] ?? 0;
 
-            // 🔸 Mise à jour du solde
+            // 🔸 Mise à jour du solde après chaque opération (fixing inclus)
             $soldes[$symbole] += $ligne['credit'] - $ligne['debit'];
             $ligne['solde_apres'] = round($soldes[$symbole], 2);
 
-            // 🔸 Si c’est un fixing → impacte le solde global
+            // 🔸 Solde après fixing (affiche l'impact réel du fixing)
             if ($ligne['type'] === 'fixing') {
-                $soldes[$symbole] -= (float) $ligne['total_facture'];
+                $ligne['solde_apres_fixing'] = round($soldes[$symbole] - (float) $ligne['total_facture'], 2);
+            } else {
+                $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
             }
-
-            $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
 
             // 🔸 Gestion du stock (pour les ventes d’or)
             if ($ligne['type'] === 'fixing') {
@@ -527,7 +527,7 @@ class ClientService
             $ligne['stock_apres'] = round($stocks[$symbole], 3);
         }
 
-        // 🔁 Tri décroissant
+        // 🔁 Tri décroissant (plus récent → plus ancien)
         $chronologique = $chronologique->sortByDesc('date')->values();
 
         return [
