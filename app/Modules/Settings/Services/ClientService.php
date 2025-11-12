@@ -651,10 +651,14 @@ class ClientService
     // }
     public function getReleveClient(int $id_client): array
     {
-        // 🔹 1. Récupérer toutes les devises actives (pour garantir toutes les clés)
-        $devises = Devise::pluck('symbole')->map(fn($s) => strtolower($s))->toArray();
+        // 🔹 1. Récupérer toutes les devises actives pour pré-créer les clés
+        $devises = Devise::pluck('symbole')
+            ->map(fn($s) => strtolower($s))
+            ->unique()
+            ->values()
+            ->all();
 
-        // 🔹 2. Opérations financières
+        // 🔹 2. Récupérer les opérations financières du client
         $operations = OperationClient::with(['typeOperation', 'devise', 'compte.banque'])
             ->where('id_client', $id_client)
             ->orderBy('created_at', 'asc')
@@ -685,7 +689,7 @@ class ClientService
                 ];
             });
 
-        // 🔹 3. Fixings
+        // 🔹 3. Récupérer les fixings
         $fixings = FixingClient::with(['devise'])
             ->where('id_client', $id_client)
             ->whereIn('status', ['vendu', 'provisoire'])
@@ -706,7 +710,7 @@ class ClientService
                     'banque'              => null,
                     'numero_compte'       => null,
                     'devise'              => $devise,
-                    'debit'               => $total,
+                    'debit'               => $total, // Fixing = sortie
                     'credit'              => 0.0,
                     'solde_avant'         => 0.0,
                     'solde_apres'         => 0.0,
@@ -723,58 +727,63 @@ class ClientService
         // 🔹 4. Fusion chronologique
         $rows = $operations->concat($fixings)->sortBy('date')->values()->all();
 
-        // 🔹 5. Initialisation
+        // 🔹 5. Initialisation des soldes et regroupements
         $soldes  = [];
         $stocks  = [];
         $grouped = [];
 
-        // Préparer les 40 devises (ou plus) comme clés vides
+        // Pré-crée toutes les devises (même si aucune opération)
         foreach ($devises as $sym) {
             $soldes[$sym]  = 0.0;
             $stocks[$sym]  = 0.0;
             $grouped[$sym] = [];
         }
 
-        // 🔹 6. Calcul et regroupement dynamique
+        // 🔹 6. Boucle principale de calcul
         foreach ($rows as $ligne) {
             $sym = $ligne['devise'] ?: 'gnf';
 
-            // Si une nouvelle devise non listée apparaît
+            // Si une nouvelle devise apparaît, on l’ajoute
             if (! isset($grouped[$sym])) {
                 $grouped[$sym] = [];
                 $soldes[$sym]  = 0.0;
                 $stocks[$sym]  = 0.0;
             }
 
+            // 1️⃣ Solde avant
             $solde_avant = $soldes[$sym];
+
+            // 2️⃣ Application de l’opération
             $soldes[$sym] += ((float) $ligne['credit'] - (float) $ligne['debit']);
 
+            // 3️⃣ Mise à jour des champs
             $ligne['solde_avant']        = round($solde_avant, 2);
             $ligne['solde_apres']        = round($soldes[$sym], 2);
             $ligne['solde_apres_fixing'] = round($soldes[$sym], 2);
 
+            // 4️⃣ Gestion du stock
             if ($ligne['type'] === 'fixing') {
                 $stocks[$sym] -= (float) $ligne['poids_sortie'];
             }
 
             $ligne['stock_apres'] = round($stocks[$sym], 3);
 
-            // Ajout dans la bonne devise
+            // 5️⃣ Ajout dans la devise correspondante
             $grouped[$sym][] = $ligne;
         }
 
-        // 🔹 7. Tri décroissant par devise
-        foreach ($grouped as $sym => &$ops) {
+        // 🔹 7. Tri décroissant pour chaque devise
+        foreach ($grouped as $dev => &$ops) {
             usort($ops, fn($a, $b) => strcmp($b['date'], $a['date']));
             $ops = array_values($ops);
         }
         unset($ops);
 
-        // 🔹 8. Structure finale : objet multi-devises
+        // 🔹 8. Retour final (objet par devise)
         return [
             'status'                 => 200,
             'message'                => 'Relevé combiné généré avec succès.',
-            'operations_financieres' => $grouped, // toutes les devises présentes (même vides)
+            'operations_financieres' => (object) $grouped, // ✅ clé = devise (jamais [])
         ];
     }
 
