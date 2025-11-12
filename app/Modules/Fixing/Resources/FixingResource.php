@@ -12,6 +12,9 @@ class FixingResource extends JsonResource
 
     public function toArray(Request $request)
     {
+        $poid_fixing = $this->poidsFixing($this->id) ?? $this->poids_pro;
+        $carrat_fixing = $this->carratFixing($this->id) ?? $this->carrat_moyenne;
+
         return [
             'id' => $this->id,
 
@@ -40,12 +43,12 @@ class FixingResource extends JsonResource
             // Fixing Barre relationship
             'fixing_barres' => FixingBarreResource::collection($this->whenLoaded('fixingBarres')),
 
-            'poids_provisoir' => $this->poids_pro,
-            'carrat_provisoir' => $this->carrat_moyenne,
+            'poids_provisoir' => number_format($poid_fixing, 2),
+            'carrat_provisoir' => number_format($carrat_fixing, 2),
 
-            'poids_fixing' => number_format($this->poidsFixing($this->id), 3),
-            'carrat_fixing' => number_format($this->carratFixing($this->id), 3),
-            'montant_total' => number_format($this->montantFixing($this->id), 3),
+            'poids_fixing' => number_format($this->poidsFixing($this->id), 2),
+            'carrat_fixing' => number_format($this->carratFixing($this->id), 2),
+            'montant_total' => number_format($this->montantFixing($this->id), 2),
 
             'discount' => $this->discount ?? null,
             'bourse' => $this->bourse ?? null,
