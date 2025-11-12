@@ -494,32 +494,32 @@ class ClientService
                 ];
             });
 
-        // 🔹 Fusion chronologique
+        // 🔹 Fusion chronologique (du plus ancien au plus récent)
         $chronologique = $operations->concat($fixings)->sortBy('date')->values();
 
-        // 🔹 Calculs progressifs (solde & stock)
+        // 🔹 Calcul progressif des soldes et du stock
         $soldes = [];
         $stocks = [];
 
         foreach ($chronologique as &$ligne) {
             $symbole = $ligne['devise'] ?? 'gnf';
 
-            // Initialisation
+            // Initialisation des soldes et stocks
             $soldes[$symbole] = $soldes[$symbole] ?? 0;
             $stocks[$symbole] = $stocks[$symbole] ?? 0;
 
-            // 🔸 Mise à jour du solde après chaque opération (fixing inclus)
+            // 🔸 Solde avant fixing
             $soldes[$symbole] += $ligne['credit'] - $ligne['debit'];
             $ligne['solde_apres'] = round($soldes[$symbole], 2);
 
-            // 🔸 Solde après fixing (affiche l'impact réel du fixing)
+            // 🔸 Si c’est un fixing, impacter le solde_apres_fixing après déduction de la facture
             if ($ligne['type'] === 'fixing') {
-                $ligne['solde_apres_fixing'] = round($soldes[$symbole] - (float) $ligne['total_facture'], 2);
+                $ligne['solde_apres_fixing'] = round($ligne['solde_apres'] - (float) $ligne['total_facture'], 2);
             } else {
-                $ligne['solde_apres_fixing'] = round($soldes[$symbole], 2);
+                $ligne['solde_apres_fixing'] = round($ligne['solde_apres'], 2);
             }
 
-            // 🔸 Gestion du stock (pour les ventes d’or)
+            // 🔸 Gestion du stock d’or
             if ($ligne['type'] === 'fixing') {
                 $stocks[$symbole] -= $ligne['poids_sortie'];
             }
@@ -527,9 +527,10 @@ class ClientService
             $ligne['stock_apres'] = round($stocks[$symbole], 3);
         }
 
-        // 🔁 Tri décroissant (plus récent → plus ancien)
+        // 🔁 Tri du plus récent au plus ancien
         $chronologique = $chronologique->sortByDesc('date')->values();
 
+        // ✅ Structure finale
         return [
             'status'               => 200,
             'message'              => 'Relevé combiné généré avec succès.',
