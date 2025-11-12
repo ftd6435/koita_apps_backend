@@ -187,6 +187,7 @@ class FixingClientService
 
     $poidsPro   = (float) $fixing->poids_pro;
     $bourse     = (float) $fixing->bourse;
+    $prixUnitaire     = (float) $fixing->prix_unitaire;
     $discompte  = (float) ($fixing->discompte ?? 0);
     $typeClient = $fixing->client?->type_client ?? 'local';
 
@@ -195,9 +196,7 @@ class FixingClientService
 
     // 💰 Si le fixing est vendu → calcul normal
     if ($fixing->status === 'vendu') {
-        $prixUnitaire = $typeClient === 'local'
-            ? ($bourse / 34) - $discompte
-            : ($bourse / 31.10347) - (32 * $discompte);
+       
 
         $totalFacture = $pureteTotale * $prixUnitaire;
     } 
