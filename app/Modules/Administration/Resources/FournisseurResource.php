@@ -30,6 +30,19 @@ class FournisseurResource extends JsonResource
                 $this->whenLoaded('operations', $this->operations ?? collect([]))
             ),
             'historiques' => $this->historiqueFournisseurComplet($this->id),
+            'fixings' => $this->fixings->map(function ($fixing) {
+                if ($fixing->status == 'en attente') {
+                    return [
+                        'poids_pro' => $fixing->poids_pro ?? 0,
+                        'carrat_pro' => $fixing->carrat_moyenne ?? 0,
+                        'discount' => $fixing->discount ?? 0,
+                        'bourse' => $fixing->bourse ?? 0,
+                        'unit_price' => $fixing->unit_price ?? 0,
+                        'devise_symbole' => $fixing->devise->symbole ?? '',
+                        'status_fixing' => $fixing->status,
+                    ];
+                }
+            }),
 
             'createdBy' => $this->createdBy ? [
                 'id' => $this->createdBy->id ?? null,
