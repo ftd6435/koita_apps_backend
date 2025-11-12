@@ -518,18 +518,14 @@ class ClientService
                 $stocks[$sym] = 0.0;
             }
 
-            // 💰 1. Solde avant fixing
+            // 1️⃣ Solde avant fixing
             $soldes[$sym] += ((float) $rows[$i]['credit'] - (float) $rows[$i]['debit']);
             $rows[$i]['solde_apres'] = round($soldes[$sym], 2);
 
-            // 💰 2. Si fixing vendu → impacter après
-            if ($rows[$i]['type'] === 'fixing' && (float) $rows[$i]['total_facture'] > 0) {
-                $soldes[$sym] -= (float) $rows[$i]['total_facture'];
-            }
-
+            // 2️⃣ Pour fixing : solde après = identique, on ne retire plus encore
             $rows[$i]['solde_apres_fixing'] = round($soldes[$sym], 2);
 
-            // ⚖️ 3. Gestion du stock d’or
+            // 3️⃣ Gestion du stock
             if ($rows[$i]['type'] === 'fixing') {
                 $stocks[$sym] -= (float) $rows[$i]['poids_sortie'];
             }
