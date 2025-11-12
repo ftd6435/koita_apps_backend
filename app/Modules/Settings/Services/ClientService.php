@@ -433,7 +433,7 @@ class ClientService
     //         'stock'                  => $stockClient,
     //     ];
     // }
-    public function  getReleveClient(int $id_client): array
+    public function getReleveClient(int $id_client): array
     {
         // 🔹 Opérations financières
         $operations = OperationClient::with(['typeOperation', 'devise', 'compte.banque'])
@@ -787,6 +787,7 @@ class ClientService
             'operations_or' => $resultatsOr,
         ];
     }
+    
 
     public function calculerSoldeGlobalClients(): array
     {
