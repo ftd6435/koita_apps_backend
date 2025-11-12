@@ -23,35 +23,35 @@ class FixingController extends Controller
     {
         $fixings = Fixing::with('fournisseur', 'devise', 'fixingBarres', 'createdBy', 'updatedBy')->orderBy('created_at', 'desc')->get();
 
-        return $this->successResponse(FixingResource::collection($fixings), "Liste de tous les fixings bien chargé.");
+        return $this->successResponse(FixingResource::collection($fixings), 'Liste de tous les fixings bien chargé.');
     }
 
     public function show(string $id)
     {
         $fixing = Fixing::with('fournisseur', 'devise', 'fixingBarres', 'createdBy', 'updatedBy')->find($id);
 
-        if(! $fixing){
-            return $this->errorResponse("Fixing introuvable");
+        if (!$fixing) {
+            return $this->errorResponse('Fixing introuvable');
         }
 
-        return $this->successResponse(new FixingResource($fixing), "Fixing demandé bien chargé.");
+        return $this->successResponse(new FixingResource($fixing), 'Fixing demandé bien chargé.');
     }
 
     public function status(Request $request, string $id)
     {
         $request->validate([
-            'status' => "required|in:en attente,confirmer,valider"
+            'status' => 'required|in:en attente,confirmer,valider',
         ]);
 
         $fixing = Fixing::find($id);
 
-        if(! $fixing){
-            return $this->errorResponse("Fixing introuvable");
+        if (!$fixing) {
+            return $this->errorResponse('Fixing introuvable');
         }
 
         $fixing->update(['status' => $request->status]);
 
-        return $this->successResponse("Status du fixing mis a jour avec succès.");
+        return $this->successResponse('Status du fixing mis a jour avec succès.');
     }
 
     public function store(StoreFixingRequest $request)
@@ -68,19 +68,19 @@ class FixingController extends Controller
                 $bourse = $fields['bourse'] ?? 0;
                 $discount = $fields['discount'] ?? 0;
 
-                $fields['unit_price'] = ($bourse / 34) - $discount;
+                $fields['unit_price'] = (float) number_format(($bourse / 34) - $discount, 2);
             }
 
             $fixing = Fixing::create($fields);
 
-            if(!empty($request->barres)){
-                foreach($request->barres as $barre){
+            if (!empty($request->barres)) {
+                foreach ($request->barres as $barre) {
                     Barre::where('id', $barre['id'])->update(['is_fixed' => true]);
 
                     FixingBarre::create([
                         'fixing_id' => $fixing->id,
                         'barre_id' => $barre['id'],
-                        'created_by' => Auth::id()
+                        'created_by' => Auth::id(),
                     ]);
                 }
             }
@@ -99,7 +99,7 @@ class FixingController extends Controller
     {
         $fixing = Fixing::find($id);
 
-        if(! $fixing){
+        if (!$fixing) {
             return $this->errorResponse('Fixing introuvable');
         }
 
@@ -121,13 +121,13 @@ class FixingController extends Controller
 
             $fixing->update([
                 'fournisseur_id' => $fields['fournisseur_id'] ?? $fixing->fournisseur_id,
-                'poids_pro'      => $fields['poids_pro'] ?? $fixing->poids_pro,
+                'poids_pro' => $fields['poids_pro'] ?? $fixing->poids_pro,
                 'carrat_moyenne' => $fields['carrat_moyenne'] ?? $fixing->carrat_moyenne,
-                'discount'       => $fields['discount'] ?? $fixing->discount,
-                'bourse'         => $fields['bourse'] ?? $fixing->bourse,
-                'unit_price'     => $fields['unit_price'] ?? $fixing->unit_price,
-                'devise_id'      => $fields['devise_id'] ?? $fixing->devise_id,
-                'updated_by'     => Auth::id()
+                'discount' => $fields['discount'] ?? $fixing->discount,
+                'bourse' => $fields['bourse'] ?? $fixing->bourse,
+                'unit_price' => $fields['unit_price'] ?? $fixing->unit_price,
+                'devise_id' => $fields['devise_id'] ?? $fixing->devise_id,
+                'updated_by' => Auth::id(),
             ]);
 
             DB::commit();
@@ -144,43 +144,43 @@ class FixingController extends Controller
     {
         $fixing = Fixing::find($id);
 
-        if(! $fixing){
-            return $this->errorResponse("Fixing introuvable");
+        if (!$fixing) {
+            return $this->errorResponse('Fixing introuvable');
         }
 
-        foreach($fixing->fixingBarres as $fixingBarre){
+        foreach ($fixing->fixingBarres as $fixingBarre) {
             $fixingBarre->barre->update(['is_fixed' => false]);
             $fixingBarre->forceDelete();
         }
 
         $fixing->delete();
 
-        return $this->deleteSuccessResponse("Fixing déplacé vers la corbeille avec succès.");
+        return $this->deleteSuccessResponse('Fixing déplacé vers la corbeille avec succès.');
     }
 
     public function restore(string $id)
     {
         $fixing = Fixing::withTrashed()->find($id);
 
-        if(! $fixing){
-            return $this->errorResponse("Fixing introuvable");
+        if (!$fixing) {
+            return $this->errorResponse('Fixing introuvable');
         }
 
         $fixing->restore();
 
-        return $this->deleteSuccessResponse("Fixing restoré avec succès.");
+        return $this->deleteSuccessResponse('Fixing restoré avec succès.');
     }
 
     public function forceDelete(string $id)
     {
         $fixing = Fixing::withTrashed()->find($id);
 
-        if(! $fixing){
-            return $this->errorResponse("Fixing introuvable");
+        if (!$fixing) {
+            return $this->errorResponse('Fixing introuvable');
         }
 
         $fixing->forceDelete();
 
-        return $this->deleteSuccessResponse("Fixing supprimé définitivement avec succès.");
+        return $this->deleteSuccessResponse('Fixing supprimé définitivement avec succès.');
     }
 }
