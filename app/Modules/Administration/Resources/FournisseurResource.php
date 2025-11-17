@@ -33,6 +33,7 @@ class FournisseurResource extends JsonResource
             'fixings' => $this->fixings->map(function ($fixing) {
                 if ($fixing->status == 'en attente') {
                     return [
+                        'fixing_id' => $fixing->id ?? 0,
                         'poids_pro' => $fixing->poids_pro ?? 0,
                         'carrat_pro' => $fixing->carrat_moyenne ?? 0,
                         'discount' => $fixing->discount ?? 0,
