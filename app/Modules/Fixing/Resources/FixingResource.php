@@ -12,8 +12,8 @@ class FixingResource extends JsonResource
 
     public function toArray(Request $request)
     {
-        $poid_fixing = $this->poidsFixing($this->id) ?? $this->poids_pro;
-        $carrat_fixing = $this->carratFixing($this->id) ?? $this->carrat_moyenne;
+        $poid_fixing = $this->poidsFixing($this->id) > 0 ? $this->poidsFixing($this->id) : $this->poids_pro;
+        $carrat_fixing = $this->carratFixing($this->id) > 0 ? $this->carratFixing($this->id) : $this->carrat_moyenne;
 
         return [
             'id' => $this->id,
