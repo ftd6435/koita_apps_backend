@@ -7,15 +7,33 @@ use App\Modules\Purchase\Models\Achat;
 use App\Modules\Purchase\Requests\StoreAchatRequest;
 use App\Modules\Purchase\Resources\AchatResource;
 use App\Traits\ApiResponses;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AchatController extends Controller
 {
     use ApiResponses;
 
-    public function index()
+    public function index(Request $request)
     {
-        $achats = Achat::with('fournisseur', 'lot', 'barres', 'createdBy', 'updatedBy')->orderBy('created_at', 'desc')->get();
+        $query = Achat::with('fournisseur', 'lot', 'barres', 'createdBy', 'updatedBy');
+
+        if ($request->filled('fournisseur_id')) {
+            $query->whereHas('fournisseur', function ($q) use ($request) {
+                $q->where('id', $request->fournisseur_id);
+            });
+        }
+
+        // 🔍 Filtrer entre deux dates (date_pointage)
+        if ($request->filled('date_debut') && $request->filled('date_fin')) {
+            $query->whereBetween('created_at', [$request->date_debut, $request->date_fin]);
+        } elseif ($request->filled('date_debut')) {
+            $query->whereDate('created_at', '>=', $request->date_debut);
+        } elseif ($request->filled('date_fin')) {
+            $query->whereDate('created_at', '<=', $request->date_fin);
+        }
+
+        $achats = $query->orderBy('created_at', 'desc')->get();
 
         return $this->successResponse(AchatResource::collection($achats), 'Liste de tous les achats');
     }
