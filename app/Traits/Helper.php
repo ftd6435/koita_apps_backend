@@ -15,7 +15,6 @@ use App\Modules\Purchase\Models\Barre;
 use App\Modules\Settings\Models\Devise;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 trait Helper
 {
@@ -33,7 +32,7 @@ trait Helper
 
         $poids = $barres->sum('poid_pure');
 
-        if($poids == 0){
+        if ($poids == 0) {
             return 0;
         }
 
@@ -48,7 +47,7 @@ trait Helper
         $barres = Barre::where('achat_id', $achat)->get();
         $somme_pureter = 0;
 
-        foreach($barres as $barre){
+        foreach ($barres as $barre) {
             $somme_pureter += $this->pureter($barre->poid_pure, $barre->carrat_pure);
         }
 
@@ -136,7 +135,7 @@ trait Helper
         foreach ($fixing_barres as $fixing_barre) {
             $barre = Barre::find($fixing_barre->barre_id);
 
-            if($barre->status == "fondue"){
+            if ($barre->status == 'fondue') {
                 $barre_fondue = Fondation::where('ids_barres', $fixing_barre->barre_id)->first();
 
                 if ($barre_fondue && $barre_fondue->statut == 'corriger') {
@@ -144,10 +143,9 @@ trait Helper
                 } else {
                     $somme_pureter += $this->pureter($barre->poid_pure, $barre->carrat_pure);
                 }
-            }else{
+            } else {
                 $somme_pureter += $this->pureter($barre->poid_pure, $barre->carrat_pure);
             }
-
         }
 
         return (float) number_format($somme_pureter, 2);
@@ -391,102 +389,6 @@ trait Helper
     /**
      * Cette method retourne toute l'historique des transaction d'un fournisseur.
      */
-    // public function historiqueFournisseurComplet($fournisseurId)
-    // {
-    //     // ✅ Load fournisseur safely
-    //     $fournisseur = Fournisseur::with([
-    //         'operations.typeOperation',
-    //         'operations.devise',
-    //         'fixings.devise',
-    //         'fixings.fixingBarres',
-    //     ])->find($fournisseurId);
-
-    //     // ✅ If supplier not found → return empty
-    //     if (!$fournisseur) {
-    //         return collect([]);
-    //     }
-
-    //     // ✅ 1. Transform operations (if any) - convert to base collection
-    //     $operations = collect($fournisseur->operations?->map(function ($op) {
-    //         $nature = $op->typeOperation?->nature ?? 0;
-    //         $montant = (float) ($op->montant ?? 0);
-    //         $dateOperation = $op->date_operation ? Carbon::parse($op->date_operation)->format('d-m-Y') : '';
-    //         $mouvement = ($op->reference ?? '').': '.($op->commentaire ?? '').' le '.$dateOperation;
-
-    //         return [
-    //             'date' => $op->created_at,
-    //             'mouvement' => $mouvement,
-    //             'credit' => $nature == 1 ? $montant : 0,
-    //             'debit' => $nature == 0 ? $montant : 0,
-    //             'symbole' => $op->devise?->symbole ?? 'N/A',
-    //         ];
-    //     }) ?? []);
-
-    //     // ✅ 2. Transform fixings (if any) - convert to base collection
-    //     $fixings = collect($fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
-    //         $devise = $fixing->devise;
-    //         $symbole = $devise?->symbole ?? 'N/A';
-    //         $hasBarres = $fixing->fixingBarres?->count() > 0;
-
-    //         // Compute unit_price if USD
-    //         $unit_price = (float) ($fixing->unit_price ?? 0);
-    //         if (Str::upper($symbole) === 'USD') {
-    //             $unit_price = ((float) ($fixing->bourse ?? 0) / 34) - (float) ($fixing->discount ?? 0);
-    //         }
-
-    //         // Compute montant
-    //         if ($hasBarres) {
-    //             $montant = (float) $this->montantFixing($fixing->id);
-    //             $commentaire = "Fixing de {$fournisseur->name}";
-    //         } else {
-    //             $montant = ($unit_price / 22) * (float) ($fixing->poids_pro ?? 0) * (float) ($fixing->carrat_moyenne ?? 0);
-    //             $commentaire = "Fixing provisoire par {$fournisseur->name}";
-    //         }
-
-    //         return [
-    //             'date' => $fixing->created_at,
-    //             'mouvement' => $commentaire,
-    //             'credit' => round($montant, 2),
-    //             'debit' => 0,
-    //             'symbole' => $symbole,
-    //         ];
-    //     }) ?? []);
-
-    //     // ✅ 3. Merge both collections (now both are base collections)
-    //     $allTransactions = $operations->merge($fixings);
-
-    //     // ✅ If no transactions at all → return empty
-    //     if ($allTransactions->isEmpty()) {
-    //         return collect([]);
-    //     }
-
-    //     // ✅ 4. Group by devise and compute running solde
-    //     $historiques = $allTransactions
-    //         ->sortBy('date')
-    //         ->groupBy('symbole')
-    //         ->map(function ($transactions) {
-    //             $solde = 0;
-
-    //             return $transactions->map(function ($t) use (&$solde) {
-    //                 $solde += $t['credit'];
-    //                 $solde -= $t['debit'];
-
-    //                 return [
-    //                     'date' => optional($t['date'])->format('d-m-Y H:i:s') ?? '',
-    //                     'mouvement' => $t['mouvement'],
-    //                     'credit' => $t['credit'],
-    //                     'debit' => $t['debit'],
-    //                     'solde' => round($solde, 2),
-    //                 ];
-    //             });
-    //         });
-
-    //     return $historiques;
-    // }
-
-    /**
-     * Cette method retourne toute l'historique des transaction d'un fournisseur.
-     */
     public function historiqueFournisseurComplet($fournisseurId)
     {
         // ✅ Load fournisseur safely
@@ -522,7 +424,7 @@ trait Helper
         }) ?? []);
 
         // ✅ 2. Transform fixings (if any) - convert to base collection
-        $fixings = collect($fournisseur->fixings?->map(function ($fixing) use ($fournisseur) {
+        $fixings = collect($fournisseur->fixings?->map(function ($fixing) {
             $devise = $fixing->devise;
             $symbole = $devise?->symbole ?? 'N/A';
             $hasBarres = $fixing->fixingBarres?->count() > 0;
@@ -540,10 +442,7 @@ trait Helper
             }
 
             // Compute unit_price if USD
-            $unit_price = (float) ($fixing->unit_price ?? 0);
-            if (Str::upper($symbole) === 'USD') {
-                $unit_price = ((float) ($fixing->bourse ?? 0) / 34) - (float) ($fixing->discount ?? 0);
-            }
+            $unit_price = $fixing->unit_price ?? 0;
 
             // Compute montant
             if ($hasBarres) {
@@ -679,114 +578,6 @@ trait Helper
 
         return (float) number_format($carrat_moyen_non_fixer, 2);
     }
-
-    /**
-     * Cette methode retourne tous les solde d'un compte dans les differents devise.
-     */
-    // public function getAccountBalance($compteId)
-    // {
-    //     // FournisseurOperation
-    //     $fournisseurTotals = FournisseurOperation::with(['devise:id,symbole', 'typeOperation:id,nature'])
-    //         ->where('compte_id', $compteId)
-    //         ->get()
-    //         ->filter(function ($operation) {
-    //             return $operation->devise && $operation->typeOperation;
-    //         })
-    //         ->groupBy('devise.symbole')
-    //         ->map(function ($group) {
-    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
-    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
-    //             return $deposits - $withdrawals;
-    //         });
-
-    //     // OperationClient
-    //     $clientTotals = OperationClient::with(['devise:id,symbole', 'typeOperation:id,nature'])
-    //         ->where('id_compte', $compteId)
-    //         ->get()
-    //         ->filter(function ($operation) {
-    //             return $operation->devise && $operation->typeOperation;
-    //         })
-    //         ->groupBy('devise.symbole')
-    //         ->map(function ($group) {
-    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
-    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
-    //             return $deposits - $withdrawals;
-    //         });
-
-    //     // OperationDivers
-    //     $diversTotals = OperationDivers::with(['devise:id,symbole', 'typeOperation:id,nature'])
-    //         ->where('id_compte', $compteId)
-    //         ->get()
-    //         ->filter(function ($operation) {
-    //             return $operation->devise && $operation->typeOperation;
-    //         })
-    //         ->groupBy('devise.symbole')
-    //         ->map(function ($group) {
-    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
-    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
-    //             return $deposits - $withdrawals;
-    //         });
-
-    //     // CaisseOperation
-    //     $caisseTotals = Caisse::with(['devise:id,symbole', 'typeOperation:id,nature'])
-    //         ->where('id_compte', $compteId)
-    //         ->get()
-    //         ->filter(function ($operation) {
-    //             return $operation->devise && $operation->typeOperation;
-    //         })
-    //         ->groupBy('devise.symbole')
-    //         ->map(function ($group) {
-    //             $deposits = $group->where('typeOperation.nature', 1)->sum('montant');
-    //             $withdrawals = $group->where('typeOperation.nature', 0)->sum('montant');
-    //             return $deposits - $withdrawals;
-    //         });
-
-    //     // Get initial balances from CompteDevise pivot table
-    //     $initialBalances = CompteDevise::where('compte_id', $compteId)
-    //         ->with('devise:id,symbole')
-    //         ->get()
-    //         ->filter(function ($compteDevise) {
-    //             return $compteDevise->devise;
-    //         })
-    //         ->mapWithKeys(function ($compteDevise) {
-    //             return [$compteDevise->devise->symbole => $compteDevise->solde_initial ?? 0];
-    //         });
-
-    //     // Merge all totals by currency
-    //     $allCurrencies = collect([])
-    //         ->merge($fournisseurTotals)
-    //         ->merge($clientTotals)
-    //         ->merge($diversTotals)
-    //         ->merge($caisseTotals);
-
-    //     // Combine with initial balances
-    //     $combinedBalances = $initialBalances->map(function ($soldeInitial, $symbole) use ($allCurrencies) {
-    //         $operationsTotal = $allCurrencies->get($symbole, 0);
-    //         return $soldeInitial + $operationsTotal;
-    //     });
-
-    //     // Add any currencies from operations that don't have initial balances
-    //     foreach ($allCurrencies as $symbole => $total) {
-    //         if (!$combinedBalances->has($symbole)) {
-    //             $combinedBalances->put($symbole, $total);
-    //         }
-    //     }
-
-    //     // Handle empty results
-    //     if ($combinedBalances->isEmpty()) {
-    //         return [];
-    //     }
-
-    //     // Format as array
-    //     $balances = $combinedBalances->map(function ($solde, $symbole) {
-    //         return [
-    //             'symbole' => $symbole,
-    //             'solde' => round($solde, 2)
-    //         ];
-    //     })->values();
-
-    //     return $balances->toArray();
-    // }
 
     /**
      * Cette methode retourne un seul solde dans une devise d'un compte donné.

@@ -79,15 +79,6 @@ class FixingController extends Controller
         DB::beginTransaction();
 
         try {
-            $devise = Devise::find($fields['devise_id']);
-
-            if (Str::upper($devise->symbole) == 'USD') {
-                $bourse = $fields['bourse'] ?? 0;
-                $discount = $fields['discount'] ?? 0;
-
-                $fields['unit_price'] = (float) number_format(($bourse / 34) - $discount, 2);
-            }
-
             $fixing = Fixing::create($fields);
 
             if (!empty($request->barres)) {
