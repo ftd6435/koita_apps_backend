@@ -54,7 +54,7 @@ class ClientService
             $data['modify_by'] = Auth::id();
             $client->update($data);
 
-            $client = Client::with(['createur', 'modificateur', 'initLivraisons', 'fixings'])
+            $client = Client::with(['createur', 'modificateur', 'fixings'])
                 ->find($id);
 
             return response()->json([
@@ -98,7 +98,7 @@ class ClientService
     public function getAll()
     {
         try {
-            $clients = Client::with(['createur', 'modificateur', 'initLivraisons', 'fixings'])
+            $clients = Client::with(['createur', 'modificateur', 'fixings'])
                 ->orderByDesc('created_at')
                 ->get();
 
@@ -122,7 +122,7 @@ class ClientService
     public function getOne(int $id)
     {
         try {
-            $client = Client::with(['createur', 'modificateur', 'initLivraisons', 'fixings'])
+            $client = Client::with(['createur', 'modificateur', 'fixings'])
                 ->findOrFail($id);
 
             return response()->json([
