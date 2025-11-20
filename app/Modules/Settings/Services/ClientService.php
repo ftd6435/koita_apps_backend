@@ -405,77 +405,54 @@ class ClientService
                     'total_facture' => $total,
                 ];
             });
-        $livraisons = InitLivraison::where('id_client', $id_client)
-            ->orderBy('created_at', 'asc')
-            ->get()
-            ->map(function ($livraison) {
-                // 🔹 Calcul de la pureté totale = Σ((poids_fondu * carrat_fondu) / 24)
-                $purete_totale = Fondation::whereHas('expedition', function ($q) use ($livraison) {
+         $livraisons = InitLivraison::where('id_client', $id_client)
+        ->orderBy('created_at', 'asc')
+        ->get()
+        ->map(function ($livraison) {
+
+            // 🔥 Calcul pureté totale (Dubai si disponible)
+            $purete_totale = Fondation::whereHas('expedition', function ($q) use ($livraison) {
                     $q->where('id_init_livraison', $livraison->id);
                 })
-                    ->get()
-                    ->sum(function ($fondation) {
-                        return ($fondation->poids_fondu * $fondation->carrat_fondu) / 24;
-                    });
+                ->get()
+                ->sum(function ($fondation) {
 
-                // ✅ Poids entrée = pureté totale arrondie à 2 décimales
-                $poids_entree = round($purete_totale, 2);
+                    $poids = ($fondation->poids_dubai > 0)
+                        ? (float) $fondation->poids_dubai
+                        : (float) $fondation->poids_fondu;
 
-                return [
-                    'type'                => 'livraison',
-                    'date'                => $livraison->created_at?->format('Y-m-d H:i:s'),
-                    'reference_operation' => $livraison->reference ?? null,
-                    'libelle_operation'   => 'Livraison d’or',
-                    'banque'              => null,
-                    'numero_compte'       => null,
-                    'devise'              => 'usd',
-                    'debit'               => 0.0,
-                    'credit'              => 0.0,
-                    'solde_avant'         => 0.0,
-                    'solde_apres'         => 0.0,
-                    'solde_apres_fixing'  => 0.0,
-                    'reference_fixing'    => null,
-                    'libelle_fixing'      => null,
-                    'poids_entree'        => $poids_entree, // ✅ pureté totale arrondie
-                    'poids_sortie'        => 0.0,
-                    'stock_avant'         => 0.0,
-                    'stock_apres'         => 0.0,
-                    'total_facture'       => 0.0,
-                ];
-            });
+                    $carrat = ($fondation->carrat_dubai > 0)
+                        ? (float) $fondation->carrat_dubai
+                        : (float) $fondation->carrat_fondu;
 
-        // 🔹 4. Récupérer les livraisons
-        // $livraisons = InitLivraison::where('id_client', $id_client)
-        //     ->orderBy('created_at', 'asc')
-        //     ->get()
-        //     ->map(function ($livraison) {
-        //         $poidsFondus = Fondation::whereHas('expedition', function ($q) use ($livraison) {
-        //             $q->where('id_init_livraison', $livraison->id);
-        //         })->sum('poids_fondu');
+                    return ($poids * $carrat) / 24;
+                });
 
-        //         return [
-        //             'type'                => 'livraison',
-        //             'date'                => $livraison->created_at?->format('Y-m-d H:i:s'),
-        //             'reference_operation' => $livraison->reference ?? null,
-        //             'libelle_operation'   => 'Livraison d’or',
-        //             'banque'              => null,
-        //             'numero_compte'       => null,
-        //             'devise'              => 'usd', // 🔸 Pas liée à la devise
-        //             'debit'               => 0.0,
-        //             'credit'              => 0.0,
-        //             'solde_avant'         => 0.0,
-        //             'solde_apres'         => 0.0,
-        //             'solde_apres_fixing'  => 0.0,
-        //             'reference_fixing'    => null,
-        //             'libelle_fixing'      => null,
-        //             'poids_entree'        => (float) $poidsFondus,
-        //             'poids_sortie'        => 0.0,
-        //             'stock_avant'         => 0.0,
-        //             'stock_apres'         => 0.0,
-        //             'total_facture'       => 0.0,
-        //         ];
-        //     });
+            $poids_entree = round($purete_totale, 2);
 
+            return [
+                'type'                => 'livraison',
+                'date'                => $livraison->created_at?->format('Y-m-d H:i:s'),
+                'reference_operation' => $livraison->reference ?? null,
+                'libelle_operation'   => 'Livraison d’or',
+                'banque'              => null,
+                'numero_compte'       => null,
+                'devise'              => 'usd',
+                'debit'               => 0.0,
+                'credit'              => 0.0,
+                'solde_avant'         => 0.0,
+                'solde_apres'         => 0.0,
+                'solde_apres_fixing'  => 0.0,
+                'reference_fixing'    => null,
+                'libelle_fixing'      => null,
+                'poids_entree'        => $poids_entree,
+                'poids_sortie'        => 0.0,
+                'stock_avant'         => 0.0,
+                'stock_apres'         => 0.0,
+                'total_facture'       => 0.0,
+            ];
+        });
+        
         // 🔹 5. Fusion complète dans l’ordre chronologique croissant (ASC)
         $rows = $operations->concat($fixings)->concat($livraisons)->sortBy('date')->values()->all();
 
