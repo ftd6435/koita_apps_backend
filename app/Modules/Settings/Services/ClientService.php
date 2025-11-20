@@ -386,8 +386,8 @@ class ClientService
                             2
                         );
                     });
-
-                $poids_entree = ($purete_totale);
+                 $purete_locale_totale=round( $purete_locale_totale,2);
+                $poids_entree = round($purete_totale,2);
 
                 return [
                     'type'                => 'livraison',
@@ -597,8 +597,8 @@ class ClientService
                     });
 
                 //'libelle_operation'   => "Livraison d’or de poids : {$purete_locale_totale}",
-
-                $poids_entree = ($purete_totale);
+                 $purete_locale_totale=round($purete_locale_totale,2);
+                $poids_entree = round($purete_totale,2);
 
                 return [
                     'type'                => 'livraison',
