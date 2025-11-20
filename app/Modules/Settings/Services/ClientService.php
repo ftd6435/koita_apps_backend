@@ -386,8 +386,8 @@ class ClientService
                             2
                         );
                     });
-                 $purete_locale_totale=round( $purete_locale_totale,2);
-                $poids_entree = round($purete_totale,2);
+                $purete_locale_totale = round($purete_locale_totale, 2);
+                $poids_entree         = round($purete_totale, 2);
 
                 return [
                     'type'                => 'livraison',
@@ -597,8 +597,8 @@ class ClientService
                     });
 
                 //'libelle_operation'   => "Livraison d’or de poids : {$purete_locale_totale}",
-                 $purete_locale_totale=round($purete_locale_totale,2);
-                $poids_entree = round($purete_totale,2);
+                $purete_locale_totale = round($purete_locale_totale, 2);
+                $poids_entree         = round($purete_totale, 2);
 
                 return [
                     'type'                => 'livraison',
@@ -680,46 +680,33 @@ class ClientService
 
     public function calculerStockClient(int $id_client): array
     {
-        // 🔹 Récupération de toutes les livraisons du client
         $livraisonIds = InitLivraison::where('id_client', $id_client)->pluck('id');
 
-        if ($livraisonIds->isEmpty()) {
-            return [
-                'id_client'    => $id_client,
-                'total_livre'  => 0.0,
-                'total_fixing' => 0.0,
-                'reste_stock'  => 0.0,
-            ];
-        }
-
-        // 🔹 Total livré : somme de tous les poids fondus livrés au client
+        // 🔹 Total livré (pureté réelle)
         $totalLivre = Fondation::whereHas('expedition', function ($q) use ($livraisonIds) {
             $q->whereIn('id_init_livraison', $livraisonIds);
         })
             ->get()
             ->sum(function ($fondation) {
 
-                // 🔥 Poids : Dubai prioritaire
                 $poids = ($fondation->poids_dubai > 0)
                     ? (float) $fondation->poids_dubai
                     : (float) $fondation->poids_fondu;
 
-                // 🔥 Carat : Dubai prioritaire
                 $carrat = ($fondation->carrat_dubai > 0)
                     ? (float) $fondation->carrat_dubai
                     : (float) $fondation->carrat_fondu;
 
-                // 🔥 Pureté locale/dubai arrondie INDIVIDUELLEMENT
                 return round(($poids * $carrat) / 24, 2);
             });
 
-        // 🔹 Total fixé : somme des poids_pro des fixings vendus du client
+        // 🔹 Total des fixings vendus
         $totalFixing = FixingClient::where('id_client', $id_client)
             ->where('status', 'vendu')
             ->sum('poids_pro');
 
-        // 🔹 Calcul du stock restant
-        $resteStock = max($totalLivre - $totalFixing, 0);
+        // ❗ NE PAS bloquer à 0 → le stock peut être NEGATIF
+        $resteStock = $totalLivre - $totalFixing;
 
         return [
             'id_client'    => $id_client,
