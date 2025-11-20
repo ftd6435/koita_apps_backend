@@ -299,6 +299,12 @@ class ClientService
 
     public function getReleveClientPeriode1(int $id_client, string $date_debut, string $date_fin): array
     {
+
+        logger()->info('DATES', [
+            'debut' => $date_debut,
+            'fin'   => $date_fin,
+        ]);
+
         // 🔹 Récupérer toutes les devises actives
         $devises = Devise::pluck('symbole')
             ->map(fn($s) => strtolower($s))

@@ -16,7 +16,7 @@ Route::middleware('auth:sanctum')->prefix('v1/settings/')->group(function () {
      Route::get('solde-global/divers', [DiversController::class, 'soldeGlobal']);
      Route::get('solde-global/clients', [ClientController::class, 'soldeGlobal']);
 
-
+    
     //truncateDatabaseExcept
     Route::delete('vider-database', [ClientController::class,'truncateDatabaseExcept']);
 });
