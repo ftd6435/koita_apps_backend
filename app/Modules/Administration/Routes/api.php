@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Administration\Controllers\AccessController;
 use App\Modules\Administration\Controllers\FournisseurController;
 use App\Modules\Administration\Controllers\UserAuthController;
 use App\Modules\Administration\Controllers\UserController;
@@ -24,6 +25,8 @@ Route::middleware('auth:sanctum')->prefix('v1/admins')->group(function(){
     Route::get('fournisseurs/restore/{id}', [FournisseurController::class, 'restore']);
     Route::delete('fournisseurs/delete/{id}', [FournisseurController::class, 'forceDelete']);
     Route::apiResource("fournisseurs", FournisseurController::class);
+
+    Route::post("accesses", [AccessController::class, 'store']);
 });
 
 Route::middleware('auth:sanctum')->prefix('v1/dashboard')->group(function(){
